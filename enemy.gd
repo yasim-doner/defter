@@ -1,0 +1,133 @@
+extends CharacterBody2D
+
+@export var patrol_range: float = 65.0
+@export var speed: float = 60.0
+
+var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity", 980.0)
+var direction: float = -1.0
+var spawn_x: float
+var spawn_pos: Vector2
+var wiggle_seed: float = 0.0
+
+func _ready() -> void:
+	spawn_pos = position
+	spawn_x = position.x
+	
+	# 1. Physics collision shape
+	var col_shape: CollisionShape2D
+	if has_node("CollisionShape2D"):
+		col_shape = get_node("CollisionShape2D")
+	else:
+		col_shape = CollisionShape2D.new()
+		col_shape.name = "CollisionShape2D"
+		add_child(col_shape)
+	
+	var shape = CircleShape2D.new()
+	shape.radius = 12.0
+	col_shape.shape = shape
+	col_shape.position = Vector2(0, -12)
+	
+	# 2. Hitbox Area2D to damage the player
+	var hitbox = Area2D.new()
+	hitbox.name = "Hitbox"
+	add_child(hitbox)
+	
+	var hitbox_col = CollisionShape2D.new()
+	hitbox_col.name = "CollisionShape2D"
+	hitbox.add_child(hitbox_col)
+	
+	var hitbox_shape = CircleShape2D.new()
+	hitbox_shape.radius = 14.0 # Slightly wider than physical collision
+	hitbox_col.shape = hitbox_shape
+	hitbox_col.position = Vector2(0, -12)
+	
+	hitbox.body_entered.connect(_on_hitbox_body_entered)
+
+@rpc("any_peer", "unreliable")
+func sync_enemy_state(pos: Vector2, dir: float) -> void:
+	if not is_multiplayer_authority_local():
+		position = pos
+		direction = dir
+
+func is_multiplayer_authority_local() -> bool:
+	if not multiplayer.has_multiplayer_peer() or multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
+		return true
+	return multiplayer.is_server()
+
+func _physics_process(delta: float) -> void:
+	# Check pause state
+	var main = get_node_or_null("/root/Main")
+	if main and main.get("is_game_paused") == true:
+		velocity = Vector2.ZERO
+		return
+
+	if not is_multiplayer_authority_local():
+		# Clients only update wiggle animation
+		wiggle_seed += delta
+		queue_redraw()
+		return
+
+	if not is_on_floor():
+		velocity.y += gravity * delta
+		
+	# Patrol horizontally
+	if abs(position.x - spawn_x) > patrol_range:
+		direction = -sign(position.x - spawn_x)
+		
+	if is_on_wall():
+		direction = -direction
+		
+	velocity.x = direction * speed
+	move_and_slide()
+	
+	# Send position update to clients
+	if multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
+		sync_enemy_state.rpc(position, direction)
+	
+	wiggle_seed += delta
+	queue_redraw()
+
+func _draw() -> void:
+	var color = Color("#323232") # Dark pencil lead
+	var pen_width = 3.0
+	var center = Vector2(0, -12)
+	var radius = 10.0
+	
+	# Draw a spiked ball (procedural points alternating between normal and spike radii)
+	var num_points = 12
+	var points = PackedVector2Array()
+	for i in range(num_points + 1):
+		var angle = i * PI * 2.0 / num_points
+		var r = radius
+		if i % 2 == 1:
+			r = radius * 1.5
+			
+		var wiggle = Vector2(
+			sin(angle * 4.0 + wiggle_seed * 35.0),
+			cos(angle * 3.0 + wiggle_seed * 40.0)
+		) * 0.7
+		points.append(center + Vector2(cos(angle), sin(angle)) * r + wiggle)
+		
+	draw_polyline(points, color, pen_width, true)
+	
+	# Draw angry eyebrows/eyes
+	draw_line(center + Vector2(-4, -3), center + Vector2(-1, -4), color, 2.0)
+	draw_line(center + Vector2(4, -3), center + Vector2(1, -4), color, 2.0)
+
+func die_by_bullet() -> void:
+	# Inform Main of the death so it can schedule a respawn
+	var main = get_node_or_null("/root/Main")
+	if main and main.has_method("_on_enemy_died"):
+		main._on_enemy_died(name, spawn_pos, patrol_range)
+	sync_die.rpc()
+
+@rpc("any_peer", "call_local", "reliable")
+func sync_die() -> void:
+	queue_free()
+
+
+func _on_hitbox_body_entered(body: Node) -> void:
+	if body.name.begins_with("Player"):
+		# Trigger player death if it hits the player
+		if body.has_method("die"):
+			body.die()

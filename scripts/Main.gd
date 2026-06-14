@@ -275,7 +275,7 @@ func sync_spawn_pen(platform_idx: int) -> void:
 	var platforms = $Platforms.get_children()
 	if platform_idx < platforms.size():
 		var target_platform = platforms[platform_idx]
-		var pen_script = preload("res://pen.gd")
+		var pen_script = preload("res://scripts/pen.gd")
 		var pen = Area2D.new()
 		pen.set_script(pen_script)
 		pen.name = "Pen"
@@ -299,7 +299,7 @@ func _spawn_enemies() -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func sync_spawn_enemy(enemy_name: String, pos: Vector2, patrol_range: float) -> void:
-	var enemy_script = preload("res://enemy.gd")
+	var enemy_script = preload("res://scripts/enemy.gd")
 	
 	# Verify Enemies container
 	if not has_node("Enemies"):

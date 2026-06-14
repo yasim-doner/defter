@@ -99,7 +99,7 @@ func _input(event: InputEvent) -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func sync_shoot(bullet_pos: Vector2, bullet_dir: Vector2) -> void:
-	var bullet_script = preload("res://bullet.gd")
+	var bullet_script = preload("res://scripts/bullet.gd")
 	var bullet = Area2D.new()
 	bullet.set_script(bullet_script)
 	bullet.name = "Bullet"

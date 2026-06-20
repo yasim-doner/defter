@@ -22,6 +22,35 @@ var player_id: int = 1
 var pen_color: Color = Color("#323232")
 var spawn_position: Vector2 = Vector2.ZERO
 
+# Procedural physical animation rig — now a FALLBACK placeholder, used only
+# until hand-drawn frame-by-frame art is dropped in (see assets/character/SPEC.md).
+const StickRig = preload("res://scripts/stick_rig.gd")
+var rig := StickRig.new()
+
+# Frame-by-frame visuals. When the SpriteFrames resource exists we play hand-
+# drawn frames and the "feel" layer (lean / squash / playback speed) is applied
+# to the sprite transform. Frames are authored facing RIGHT, 64x80, feet centred
+# at the bottom (pixel 32,72) — see SPEC.md.
+const FRAMES_PATH := "res://assets/character/player_frames.tres"
+const SPRITE_FEET := Vector2(128, 289)  # feet pixel in the 256x320 art
+const SPRITE_BASE_SCALE := 0.52         # art is ~4x game size
+# Per-clip size tweak without redrawing, e.g. {"jump_launch": 1.3}. Default 1.0.
+const SPRITE_CLIP_SCALE := {}
+# Jump finite-state machine: phase -> clip name; and where a finished one-shot goes.
+const _PHASE_CLIP := {
+	"launch": "jump_launch", "rise": "jump_rise",
+	"tofall": "jump_fall_trans", "fall": "jump_fall", "land": "land",
+}
+const _ONESHOT_NEXT := {"launch": "rise", "tofall": "fall", "land": ""}
+var sprite: AnimatedSprite2D = null
+var use_frames: bool = false
+var _anim: String = ""
+var _lean: float = 0.0
+var _vis_scale: Vector2 = Vector2.ONE
+var _idle_t: float = 0.0
+var _jump_phase: String = ""   # "", launch, rise, tofall, fall, land
+var _was_on_floor: bool = true
+
 func _ready() -> void:
 	_setup_input_actions()
 	if name == "Player1":
@@ -30,6 +59,28 @@ func _ready() -> void:
 	elif name == "Player2":
 		player_id = 2
 		pen_color = Color("#1a3a60") # Blue pen ink
+	_setup_sprite()
+
+# Per-player frame set (p1 = şapka, p2 = bandana); shared set as fallback.
+func _frames_path() -> String:
+	var per_player := "res://assets/character/p%d_frames.tres" % player_id
+	if ResourceLoader.exists(per_player):
+		return per_player
+	return FRAMES_PATH
+
+func _setup_sprite() -> void:
+	# Use hand-drawn frames if they exist; otherwise fall back to the rig.
+	var path := _frames_path()
+	if not ResourceLoader.exists(path):
+		return
+	sprite = AnimatedSprite2D.new()
+	sprite.name = "Sprite"
+	sprite.sprite_frames = load(path)
+	sprite.centered = false
+	sprite.offset = -SPRITE_FEET  # put the feet pixel at the node origin
+	add_child(sprite)
+	sprite.animation_finished.connect(_on_sprite_anim_finished)
+	use_frames = true
 
 func setup_camera() -> void:
 	if has_node("Camera2D"):
@@ -179,9 +230,12 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if not is_local():
-		# Remote player: update wiggle seed and redraw, skip inputs/movement
-		wiggle_seed += delta
-		queue_redraw()
+		# Remote player: drive the rig from synced state, skip inputs/movement
+		var r_holding: bool = has_node("DrawnGun") and $DrawnGun.lines.size() > 0
+		var r_aim: float = $DrawnGun.rotation if r_holding else NAN
+		var r_face: float = 1.0 if facing_right else -1.0
+		var r_on_floor: bool = absf(velocity.y) < 40.0
+		_drive_visual(delta, velocity, r_on_floor, r_face, r_holding, r_aim)
 		return
 
 	# Update coyote jump window
@@ -246,7 +300,7 @@ func _physics_process(delta: float) -> void:
 					if tile_data and tile_data.get_custom_data("is_spike") == true:
 						var cell_center = child.map_to_local(map_pos)
 						var rel_pos = local_pt - cell_center # Offset from the tile center
-						
+
 						# Query all custom collision polygons drawn on this tile in Physics Layer 0
 						var poly_count = tile_data.get_collision_polygons_count(0)
 						for i in range(poly_count):
@@ -259,7 +313,7 @@ func _physics_process(delta: float) -> void:
 						break
 				if died:
 					break
-	
+
 	# Position and rotate the gun to point at the mouse
 	var gun_rot = 0.0
 	if has_node("DrawnGun") and $DrawnGun.lines.size() > 0:
@@ -284,90 +338,111 @@ func _physics_process(delta: float) -> void:
 	# Send updated local player state to the remote peer
 	if multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
 		sync_state.rpc(position, velocity, facing_right, gun_rot)
-	
-	# Redraw for the hand-drawn wiggle
-	wiggle_seed += delta
-	queue_redraw()
 
-# Helper to draw a circle for the head
-func draw_circle_outline(center: Vector2, radius: float, color: Color, width: float) -> void:
-	var points = PackedVector2Array()
-	var num_points = 16
-	for i in range(num_points + 1):
-		var angle = i * PI * 2.0 / num_points
-		var wiggle = Vector2(
-			sin(angle * 3.0 + wiggle_seed * 40.0),
-			cos(angle * 2.0 + wiggle_seed * 35.0)
-		) * 0.8
-		points.append(center + Vector2(cos(angle), sin(angle)) * radius + wiggle)
-	draw_polyline(points, color, width, true)
+	# Drive the procedural rig and redraw
+	var holding: bool = has_node("DrawnGun") and $DrawnGun.lines.size() > 0
+	var aim: float = gun_rot if holding else NAN
+	var face: float = 1.0 if facing_right else -1.0
+	_drive_visual(delta, velocity, is_on_floor(), face, holding, aim)
 
-# Helper to draw a wiggle line
-func draw_wiggle_line(from: Vector2, to: Vector2, color: Color, width: float) -> void:
-	var w1 = Vector2(sin(wiggle_seed * 62.0), cos(wiggle_seed * 54.0)) * 0.7
-	var w2 = Vector2(cos(wiggle_seed * 48.0), sin(wiggle_seed * 58.0)) * 0.7
-	draw_line(from + w1, to + w2, color, width)
+# Routes the "feel" layer either to the hand-drawn sprite or the rig fallback.
+func _drive_visual(delta: float, vel: Vector2, on_floor: bool, face: float, holding: bool, aim: float) -> void:
+	if use_frames:
+		_update_sprite(delta, vel, on_floor, face, holding)
+	else:
+		rig.update(delta, vel, on_floor, face, holding, aim)
+		queue_redraw()
+
+func _has_clip(c: String) -> bool:
+	return c != "" and sprite.sprite_frames.has_animation(c)
+
+func _ground_state(vel: Vector2) -> String:
+	if absf(vel.x) > SPEED * 0.55:
+		return "run"
+	if absf(vel.x) > 12.0:
+		return "walk"
+	return "idle"
+
+# Set the jump phase. A missing one-shot clip auto-advances so we never stall.
+func _enter_phase(p: String) -> void:
+	_jump_phase = p
+	if p == "":
+		return
+	if not _has_clip(_PHASE_CLIP[p]) and _ONESHOT_NEXT.has(p):
+		_enter_phase(_ONESHOT_NEXT[p])
+
+func _on_sprite_anim_finished() -> void:
+	if _ONESHOT_NEXT.has(_jump_phase):
+		_enter_phase(_ONESHOT_NEXT[_jump_phase])
+
+# Drive the AnimatedSprite2D: jump FSM + ground states, speed scaling, and the
+# momentum lean / squash-stretch feel layer.
+func _update_sprite(delta: float, vel: Vector2, on_floor: bool, face: float, holding: bool) -> void:
+	sprite.flip_h = face < 0.0
+
+	# Jump state-machine edges.
+	if on_floor and not _was_on_floor:
+		_enter_phase("land")
+	elif not on_floor and _was_on_floor:
+		_enter_phase("launch" if vel.y < 0.0 else "fall")
+	if _jump_phase == "rise" and vel.y > -40.0:   # past the apex
+		_enter_phase("tofall")
+	if on_floor and _jump_phase != "land":
+		_jump_phase = ""
+	elif not on_floor and _jump_phase == "":
+		_enter_phase("fall")
+	_was_on_floor = on_floor
+
+	# Resolve the clip (+ a generic label for the feel layer).
+	var st: String = _jump_phase if _jump_phase != "" else _ground_state(vel)
+	var clip: String = st
+	if _jump_phase != "":
+		clip = _PHASE_CLIP[_jump_phase]
+	if not _has_clip(clip):
+		clip = "run" if absf(vel.x) > 12.0 else "idle"   # fallback while art is missing
+	if clip != _anim:
+		_anim = clip
+		if _has_clip(clip):
+			sprite.play(clip)
+
+	if st == "run" or st == "walk":
+		sprite.speed_scale = clampf(absf(vel.x) / (SPEED * 0.5), 0.6, 2.2)
+	else:
+		sprite.speed_scale = 1.0
+
+	# Momentum lean (pivots at the feet because the sprite origin is the feet).
+	var run_t := clampf(absf(vel.x) / SPEED, 0.0, 1.0)
+	var dir := signf(vel.x)
+	var target_lean := dir * run_t * 0.45
+	if not on_floor:
+		# Air lean scales with horizontal speed (near-vertical jumps barely lean).
+		var h := clampf(absf(vel.x) / 140.0, 0.0, 1.0)
+		if vel.y < 0.0:
+			target_lean = dir * h * 0.40    # rising: lean forward, hands lead the jump
+		else:
+			target_lean = -dir * h * 0.32   # falling: lean back so the feet lead forward
+	_lean = lerp(_lean, target_lean, clampf(delta * 10.0, 0.0, 1.0))
+
+	# Squash & stretch.
+	var ts := Vector2.ONE
+	if not on_floor:
+		# rising: stretch up; falling: a slight dive-stretch (no shrink — the
+		# impact squash belongs to the `land` clip, not free-fall).
+		ts = Vector2(0.92, 1.12) if vel.y < 0.0 else Vector2(0.97, 1.05)
+	_vis_scale = _vis_scale.lerp(ts, clampf(delta * 12.0, 0.0, 1.0))
+	var cscale: float = SPRITE_CLIP_SCALE.get(clip, 1.0)
+	sprite.scale = _vis_scale * (SPRITE_BASE_SCALE * cscale)
+
+	# Final orientation: momentum lean + a gentle idle breathing bob/sway.
+	if st == "idle":
+		_idle_t += delta
+		sprite.position = Vector2(0, sin(_idle_t * 2.2) * 1.5)
+		sprite.rotation = _lean + sin(_idle_t * 1.3) * 0.02
+	else:
+		_idle_t = 0.0
+		sprite.position = Vector2.ZERO
+		sprite.rotation = _lean
 
 func _draw() -> void:
-	var flip = 1.0 if facing_right else -1.0
-	var color = pen_color
-	var pen_width = 3.5
-	
-	# 1. Head
-	var head_center = Vector2(0, -42)
-	draw_circle_outline(head_center, 9.0, color, pen_width)
-	
-	# 2. Torso (Neck to Hips)
-	var neck = Vector2(0, -33)
-	var hips = Vector2(0, -16)
-	draw_wiggle_line(neck, hips, color, pen_width)
-	
-	# Calculate legs and arms positions
-	var left_foot = Vector2(-8 * flip, 0)
-	var right_foot = Vector2(8 * flip, 0)
-	var left_hand = Vector2(-12 * flip, -24)
-	var right_hand = Vector2(12 * flip, -24)
-	
-	if not is_on_floor():
-		# Air animations (jumping/falling)
-		var arm_raise = clamp(-velocity.y / 200.0, -1.0, 1.0)
-		left_hand = Vector2(-10 * flip, -32 - arm_raise * 10)
-		right_hand = Vector2(10 * flip, -32 - arm_raise * 10)
-		# Pull legs up slightly
-		left_foot = Vector2(-6 * flip, -4)
-		right_foot = Vector2(6 * flip, -4)
-	else:
-		# Ground animations (standing/walking)
-		if abs(velocity.x) > 10.0:
-			var left_phase = walk_time
-			var right_phase = walk_time + PI
-			
-			left_foot = Vector2(sin(left_phase) * 10 * flip, cos(left_phase) * 3 - 1)
-			right_foot = Vector2(sin(right_phase) * 10 * flip, cos(right_phase) * 3 - 1)
-			
-			left_hand = Vector2(-8 * flip + sin(right_phase) * 6 * flip, -24 + cos(right_phase) * 4)
-			right_hand = Vector2(8 * flip + sin(left_phase) * 6 * flip, -24 + cos(left_phase) * 4)
-		else:
-			# Idle standing pose
-			left_foot = Vector2(-7 * flip, 0)
-			right_foot = Vector2(7 * flip, 0)
-			left_hand = Vector2(-10 * flip, -20)
-			right_hand = Vector2(10 * flip, -20)
-
-	# Override arm posture if holding a gun
-	if has_node("DrawnGun") and $DrawnGun.lines.size() > 0:
-		if facing_right:
-			right_hand = Vector2(14, -26)
-			left_hand = Vector2(4, -24)
-		else:
-			left_hand = Vector2(-14, -26)
-			right_hand = Vector2(-4, -24)
-
-	# 3. Draw Legs (Hips to feet)
-	draw_wiggle_line(hips, left_foot, color, pen_width)
-	draw_wiggle_line(hips, right_foot, color, pen_width)
-	
-	# 4. Draw Arms (Shoulders to hands)
-	var shoulders = Vector2(0, -30)
-	draw_wiggle_line(shoulders, left_hand, color, pen_width)
-	draw_wiggle_line(shoulders, right_hand, color, pen_width)
+	if not use_frames:
+		rig.draw(self, pen_color, 3.5)

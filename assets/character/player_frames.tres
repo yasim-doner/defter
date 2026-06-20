@@ -1,0 +1,47 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://ctug25atm0se3"]
+
+[ext_resource type="Texture2D" path="res://assets/character/idle/idle0001.png" id="1"]
+[ext_resource type="Texture2D" path="res://assets/character/idle/idle0002.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/character/run/run0001.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/character/run/run0002.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/character/run/run0003.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/character/run/run0004.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/character/run/run0005.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/character/run/run0006.png" id="8"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8")
+}],
+"loop": true,
+"name": &"run",
+"speed": 12.0
+}]

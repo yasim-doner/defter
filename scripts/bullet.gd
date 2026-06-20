@@ -4,6 +4,7 @@ extends Area2D
 var direction: Vector2 = Vector2.RIGHT
 var wiggle_seed: float = 0.0
 var bullet_color: Color = Color("#323232")
+var lifetime: float = 2.0
 
 func _ready() -> void:
 	# Add a CollisionShape2D if it doesn't exist
@@ -23,17 +24,18 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	# Check pause state
-	var main = get_node_or_null("/root/Main")
+	var main = get_tree().current_scene
 	if main and main.get("is_game_paused") == true:
 		return
 		
 	# Move bullet
 	position += direction * speed * delta
 	
-	# Delete if off screen bounds
-	var viewport_size = get_viewport_rect().size
-	if position.x < -50 or position.x > viewport_size.x + 50 or position.y < -50 or position.y > viewport_size.y + 50:
+	# Delete if lifetime expires
+	lifetime -= delta
+	if lifetime <= 0.0:
 		queue_free()
+		return
 		
 	wiggle_seed += delta
 	queue_redraw()

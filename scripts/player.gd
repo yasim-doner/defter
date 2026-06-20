@@ -20,6 +20,7 @@ var jump_buffer_timer: float = 0.0
 
 var player_id: int = 1
 var pen_color: Color = Color("#323232")
+var spawn_position: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	_setup_input_actions()
@@ -29,6 +30,44 @@ func _ready() -> void:
 	elif name == "Player2":
 		player_id = 2
 		pen_color = Color("#1a3a60") # Blue pen ink
+
+func setup_camera() -> void:
+	if has_node("Camera2D"):
+		get_node("Camera2D").queue_free()
+		
+	if is_local():
+		var camera = Camera2D.new()
+		camera.name = "Camera2D"
+		camera.position_smoothing_enabled = true
+		camera.position_smoothing_speed = 5.0
+		
+		# Prevent camera from showing outside page boundaries by scanning the backgrounds
+		var scene = get_tree().current_scene
+		if scene:
+			var bg_container = scene.get_node_or_null("Backgrounds")
+			if bg_container and bg_container.get_child_count() > 0:
+				var min_pos = Vector2(INF, INF)
+				var max_pos = Vector2(-INF, -INF)
+				for child in bg_container.get_children():
+					if child is Sprite2D and child.texture:
+						var tex_size = child.texture.get_size()
+						var half_size = tex_size / 2.0
+						var top_left = child.position - half_size
+						var bottom_right = child.position + half_size
+						min_pos.x = min(min_pos.x, top_left.x)
+						min_pos.y = min(min_pos.y, top_left.y)
+						max_pos.x = max(max_pos.x, bottom_right.x)
+						max_pos.y = max(max_pos.y, bottom_right.y)
+				
+				if min_pos.x != INF:
+					camera.limit_left = int(min_pos.x)
+					camera.limit_top = int(min_pos.y)
+					camera.limit_right = int(max_pos.x)
+					camera.limit_bottom = int(max_pos.y)
+		
+		add_child(camera)
+		camera.make_current()
+
 
 func is_local() -> bool:
 	if not multiplayer.has_multiplayer_peer() or multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
@@ -75,10 +114,13 @@ func die() -> void:
 func _respawn() -> void:
 	velocity = Vector2.ZERO
 	set_weapon_lines([])
-	if player_id == 1:
-		position = Vector2(200, 400)
+	if spawn_position != Vector2.ZERO:
+		position = spawn_position
 	else:
-		position = Vector2(300, 400)
+		if player_id == 1:
+			position = Vector2(200, 400)
+		else:
+			position = Vector2(300, 400)
 
 func _input(event: InputEvent) -> void:
 	if not is_local():

@@ -56,7 +56,7 @@ func is_multiplayer_authority_local() -> bool:
 
 func _physics_process(delta: float) -> void:
 	# Check pause state
-	var main = get_node_or_null("/root/Main")
+	var main = get_tree().current_scene
 	if main and main.get("is_game_paused") == true:
 		velocity = Vector2.ZERO
 		return
@@ -116,7 +116,7 @@ func _draw() -> void:
 
 func die_by_bullet() -> void:
 	# Inform Main of the death so it can schedule a respawn
-	var main = get_node_or_null("/root/Main")
+	var main = get_tree().current_scene
 	if main and main.has_method("_on_enemy_died"):
 		main._on_enemy_died(name, spawn_pos, patrol_range)
 	sync_die.rpc()

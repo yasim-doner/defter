@@ -1,0 +1,314 @@
+[gd_scene format=3 uid="uid://b8yqx5u5u7f5e"]
+
+[ext_resource type="Script" path="res://scripts/Level1.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/drawn_gun.gd" id="3_gun"]
+[ext_resource type="Script" path="res://scripts/platform.gd" id="4_platform"]
+[ext_resource type="Script" path="res://scripts/pen.gd" id="5_pen"]
+[ext_resource type="Script" path="res://scripts/enemy.gd" id="6_enemy"]
+[ext_resource type="Texture2D" uid="uid://deiow8v3e8n3a" path="res://assets/Resim (11).jpg" id="7_page1"]
+[ext_resource type="Script" path="res://scripts/drawing_canvas.gd" id="9_canvas"]
+[ext_resource type="Script" path="res://scripts/death_screen.gd" id="10_death"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
+radius = 8.0
+height = 42.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
+bg_color = Color(0.992157, 0.984314, 0.968627, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.172549, 0.172549, 0.172549, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
+bg_color = Color(0.960784, 0.94902, 0.921569, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.172549, 0.172549, 0.172549, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_pressed"]
+bg_color = Color(0.909804, 0.894118, 0.854902, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.172549, 0.172549, 0.172549, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
+
+[node name="Level1" type="Node2D"]
+script = ExtResource("1_level")
+
+[node name="Backgrounds" type="Node2D" parent="."]
+
+[node name="Page1" type="Sprite2D" parent="Backgrounds"]
+position = Vector2(1258, 1736)
+texture = ExtResource("7_page1")
+
+[node name="Platforms" type="Node2D" parent="."]
+
+[node name="Floor1" type="StaticBody2D" parent="Platforms"]
+position = Vector2(1258, 3200)
+script = ExtResource("4_platform")
+width = 2400.0
+
+[node name="PlatformA" type="StaticBody2D" parent="Platforms"]
+position = Vector2(500, 2900)
+script = ExtResource("4_platform")
+width = 300.0
+
+[node name="PlatformB" type="StaticBody2D" parent="Platforms"]
+position = Vector2(900, 2700)
+script = ExtResource("4_platform")
+width = 300.0
+
+[node name="PlatformC" type="StaticBody2D" parent="Platforms"]
+position = Vector2(1300, 2500)
+script = ExtResource("4_platform")
+width = 300.0
+
+[node name="PlatformD" type="StaticBody2D" parent="Platforms"]
+position = Vector2(1700, 2300)
+script = ExtResource("4_platform")
+width = 300.0
+
+[node name="PlatformE" type="StaticBody2D" parent="Platforms"]
+position = Vector2(2100, 2100)
+script = ExtResource("4_platform")
+width = 300.0
+
+[node name="PlatformF" type="StaticBody2D" parent="Platforms"]
+position = Vector2(1700, 1900)
+script = ExtResource("4_platform")
+width = 300.0
+
+[node name="PlatformG" type="StaticBody2D" parent="Platforms"]
+position = Vector2(1300, 1700)
+script = ExtResource("4_platform")
+width = 300.0
+
+[node name="PlatformH" type="StaticBody2D" parent="Platforms"]
+position = Vector2(900, 1500)
+script = ExtResource("4_platform")
+width = 300.0
+
+[node name="PlatformI" type="StaticBody2D" parent="Platforms"]
+position = Vector2(500, 1300)
+script = ExtResource("4_platform")
+width = 300.0
+
+[node name="PlatformJ" type="StaticBody2D" parent="Platforms"]
+position = Vector2(1258, 1000)
+script = ExtResource("4_platform")
+width = 800.0
+
+[node name="Pens" type="Node2D" parent="."]
+
+[node name="Pen1" type="Area2D" parent="Pens"]
+position = Vector2(1300, 2420)
+script = ExtResource("5_pen")
+
+[node name="Pen2" type="Area2D" parent="Pens"]
+position = Vector2(500, 1220)
+script = ExtResource("5_pen")
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="Enemy1" type="CharacterBody2D" parent="Enemies"]
+position = Vector2(900, 2650)
+script = ExtResource("6_enemy")
+patrol_range = 80.0
+
+[node name="Enemy2" type="CharacterBody2D" parent="Enemies"]
+position = Vector2(1700, 1850)
+script = ExtResource("6_enemy")
+patrol_range = 80.0
+
+[node name="Enemy3" type="CharacterBody2D" parent="Enemies"]
+position = Vector2(1258, 3150)
+script = ExtResource("6_enemy")
+patrol_range = 400.0
+
+[node name="Player1" type="CharacterBody2D" parent="."]
+position = Vector2(250, 3100)
+script = ExtResource("2_player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player1"]
+position = Vector2(0, -21)
+shape = SubResource("CapsuleShape2D_player")
+
+[node name="DrawnGun" type="Node2D" parent="Player1"]
+script = ExtResource("3_gun")
+
+[node name="Player2" type="CharacterBody2D" parent="."]
+position = Vector2(400, 3100)
+script = ExtResource("2_player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player2"]
+position = Vector2(0, -21)
+shape = SubResource("CapsuleShape2D_player")
+
+[node name="DrawnGun" type="Node2D" parent="Player2"]
+script = ExtResource("3_gun")
+
+[node name="Bullets" type="Node2D" parent="."]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="DeathScreen" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("10_death")
+
+[node name="Panel" type="Control" parent="UI/DeathScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="UI/DeathScreen/Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -80.0
+offset_right = 180.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.196078, 0.196078, 0.196078, 1)
+theme_override_font_sizes/font_size = 24
+text = "Oops! You fell off the page!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ReplayButton" type="Button" parent="UI/DeathScreen/Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = 10.0
+offset_right = 100.0
+offset_bottom = 58.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.196078, 0.196078, 0.196078, 1)
+theme_override_colors/font_pressed_color = Color(0.196078, 0.196078, 0.196078, 1)
+theme_override_colors/font_hover_color = Color(0.196078, 0.196078, 0.196078, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "Draw Me Again"
+
+[node name="DrawingCanvas" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("9_canvas")
+
+[node name="Panel" type="Control" parent="UI/DrawingCanvas"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TimerLabel" type="Label" parent="UI/DrawingCanvas/Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -210.0
+offset_right = 150.0
+offset_bottom = -160.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.196078, 0.196078, 0.196078, 1)
+theme_override_font_sizes/font_size = 22
+text = "Ink Dry Time: 10"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClearButton" type="Button" parent="UI/DrawingCanvas/Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -190.0
+offset_top = 140.0
+offset_right = -10.0
+offset_bottom = 182.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.196078, 0.196078, 0.196078, 1)
+theme_override_colors/font_pressed_color = Color(0.196078, 0.196078, 0.196078, 1)
+theme_override_colors/font_hover_color = Color(0.196078, 0.196078, 0.196078, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "Clear Screen (R-Click)"
+
+[node name="DoneButton" type="Button" parent="UI/DrawingCanvas/Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 10.0
+offset_top = 140.0
+offset_right = 190.0
+offset_bottom = 182.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.196078, 0.196078, 0.196078, 1)
+theme_override_colors/font_pressed_color = Color(0.196078, 0.196078, 0.196078, 1)
+theme_override_colors/font_hover_color = Color(0.196078, 0.196078, 0.196078, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+text = "Finish Drawing"

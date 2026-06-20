@@ -80,6 +80,38 @@ func _physics_process(delta: float) -> void:
 	velocity.x = direction * speed
 	move_and_slide()
 	
+	# Check for spike collisions (using the editor-defined custom collision shapes of the spike tile)
+	var level = get_tree().current_scene
+	if level:
+		for child in level.get_children():
+			if child is TileMapLayer:
+				var check_points = [
+					global_position + Vector2(0, 4), # slightly below bottom (to query inside solid shape)
+					global_position, # bottom
+					global_position + Vector2(0, -8) # lower body
+				]
+				var died = false
+				for pt in check_points:
+					var local_pt = child.to_local(pt)
+					var map_pos = child.local_to_map(local_pt)
+					var tile_data = child.get_cell_tile_data(map_pos)
+					if tile_data and tile_data.get_custom_data("is_spike") == true:
+						var cell_center = child.map_to_local(map_pos)
+						var rel_pos = local_pt - cell_center # Offset from the tile center
+						
+						# Query all custom collision polygons drawn on this tile in Physics Layer 0
+						var poly_count = tile_data.get_collision_polygons_count(0)
+						for i in range(poly_count):
+							var poly_points = tile_data.get_collision_polygon_points(0, i)
+							if Geometry2D.is_point_in_polygon(rel_pos, poly_points):
+								die_by_bullet()
+								died = true
+								break
+					if died:
+						break
+				if died:
+					break
+	
 	# Send position update to clients
 	if multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
 		sync_enemy_state.rpc(position, direction)

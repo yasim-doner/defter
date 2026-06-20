@@ -22,6 +22,13 @@ var player_id: int = 1
 var pen_color: Color = Color("#323232")
 var spawn_position: Vector2 = Vector2.ZERO
 
+var is_parachute_active: bool = false
+var parachute_timer: float = 0.0
+var is_near_parachute_area: bool = false
+var active_parachute_area: Area2D = null
+var parachute_texture: Texture2D = preload("res://assets/parasut.png")
+var teleport_cooldown: float = 0.0
+
 func _ready() -> void:
 	_setup_input_actions()
 	if name == "Player1":
@@ -79,7 +86,8 @@ func _setup_input_actions() -> void:
 	var actions = {
 		"move_left": [KEY_A, KEY_LEFT],
 		"move_right": [KEY_D, KEY_RIGHT],
-		"jump": [KEY_W, KEY_SPACE, KEY_UP]
+		"jump": [KEY_W, KEY_SPACE, KEY_UP],
+		"interact": [KEY_E]
 	}
 	
 	for action in actions:
@@ -109,6 +117,8 @@ func sync_weapon_drawing(new_lines: Array) -> void:
 func die() -> void:
 	# Endless game: respawn immediately at spawn point and clear gun
 	if is_local():
+		if is_parachute_active:
+			sync_deactivate_parachute.rpc()
 		_respawn()
 
 func _respawn() -> void:
@@ -125,6 +135,14 @@ func _respawn() -> void:
 func _input(event: InputEvent) -> void:
 	if not is_local():
 		return
+		
+	if event.is_action_pressed("interact"):
+		if is_near_parachute_area and not is_parachute_active:
+			var duration = 10.0
+			if active_parachute_area and "parachute_duration" in active_parachute_area:
+				duration = active_parachute_area.parachute_duration
+			sync_activate_parachute.rpc(duration)
+			
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			# Only shoot if we have weapon lines and are actively processing physics (not paused/dead/drawing)
@@ -138,6 +156,18 @@ func _input(event: InputEvent) -> void:
 					var spawn_pos = gun_pos + dir * 24.0
 					
 					sync_shoot.rpc(spawn_pos, dir)
+
+@rpc("any_peer", "call_local", "reliable")
+func sync_activate_parachute(duration: float) -> void:
+	is_parachute_active = true
+	parachute_timer = duration
+	queue_redraw()
+
+@rpc("any_peer", "call_local", "reliable")
+func sync_deactivate_parachute() -> void:
+	is_parachute_active = false
+	parachute_timer = 0.0
+	queue_redraw()
 
 @rpc("any_peer", "call_local", "reliable")
 func sync_shoot(bullet_pos: Vector2, bullet_dir: Vector2) -> void:
@@ -178,11 +208,27 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 
+	# Update parachute timer for both local and remote players
+	if is_parachute_active:
+		parachute_timer -= delta
+		if parachute_timer <= 0.0:
+			is_parachute_active = false
+			queue_redraw()
+
 	if not is_local():
 		# Remote player: update wiggle seed and redraw, skip inputs/movement
 		wiggle_seed += delta
 		queue_redraw()
 		return
+
+	# Update teleport cooldown for local player
+	if teleport_cooldown > 0.0:
+		teleport_cooldown -= delta
+
+	# Update interaction prompt visibility for local player
+	var prompt = get_node_or_null("/root/Level1/UI/InteractionPrompt")
+	if prompt:
+		prompt.visible = is_near_parachute_area and not is_parachute_active
 
 	# Update coyote jump window
 	if is_on_floor():
@@ -201,6 +247,10 @@ func _physics_process(delta: float) -> void:
 		if abs(velocity.y) < 70.0 and Input.is_action_pressed("jump"):
 			active_gravity = gravity * 0.55
 		velocity.y += active_gravity * delta
+		
+		# If parachute is active, only cap the falling/downward speed to create a glide
+		if is_parachute_active and velocity.y > 90.0:
+			velocity.y = 90.0
 
 	# Trigger jump if within coyote and jump buffer windows
 	if jump_buffer_timer > 0.0 and coyote_timer > 0.0:
@@ -371,3 +421,9 @@ func _draw() -> void:
 	var shoulders = Vector2(0, -30)
 	draw_wiggle_line(shoulders, left_hand, color, pen_width)
 	draw_wiggle_line(shoulders, right_hand, color, pen_width)
+
+	# 5. Draw Parachute
+	if is_parachute_active and parachute_texture:
+		var tex_size = parachute_texture.get_size()
+		var dest_rect = Rect2(Vector2(-tex_size.x / 2.0, -25.5 - tex_size.y / 2.0), tex_size)
+		draw_texture_rect(parachute_texture, dest_rect, false)

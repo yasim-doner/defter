@@ -51,11 +51,17 @@ func _ready() -> void:
 			
 	# Monitor network disconnect to clean up
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
+	
+	# Connect to all pre-placed pressure plates in the scene
+	var all_plates = get_tree().get_nodes_in_group("pressure_plates")
+	for plate in all_plates:
+		plate.pressed_state_changed.connect(_on_plate_state_changed)
 
 func _process(_delta: float) -> void:
 	# Fall limit check for player respawning
 	var fall_limit = 3550.0
-	if multiplayer.is_server():
+	var is_host = not multiplayer.multiplayer_peer or multiplayer.is_server()
+	if is_host:
 		if player1.position.y > fall_limit:
 			player1.die()
 	else:
@@ -79,12 +85,14 @@ func sync_pen_collected(by_player: String, pen_path: NodePath) -> void:
 		get_node(pen_path).queue_free()
 		
 	# Open drawing screen locally ONLY on the client who touched the pen
-	var local_player_node_name = "Player1" if multiplayer.is_server() else "Player2"
+	var is_host = not multiplayer.multiplayer_peer or multiplayer.is_server()
+	var local_player_node_name = "Player1" if is_host else "Player2"
 	if by_player == local_player_node_name:
 		drawing_canvas.start_drawing()
 
 func _on_drawing_finished(lines: Array) -> void:
-	var local_player = player1 if multiplayer.is_server() else player2
+	var is_host = not multiplayer.multiplayer_peer or multiplayer.is_server()
+	var local_player = player1 if is_host else player2
 	local_player.set_weapon_lines(lines)
 	sync_pause.rpc(false)
 
@@ -98,7 +106,7 @@ func _on_peer_disconnected(_id: int) -> void:
 	get_tree().change_scene_to_file("res://Main.tscn")
 
 func _on_enemy_died(enemy_name: String, pos: Vector2, patrol_range: float) -> void:
-	if not multiplayer.is_server():
+	if multiplayer.multiplayer_peer and not multiplayer.is_server():
 		return
 	# Wait 5 seconds, then respawn the enemy using RPC
 	await get_tree().create_timer(5.0).timeout
@@ -119,3 +127,41 @@ func sync_spawn_enemy(enemy_name: String, pos: Vector2, patrol_range: float) -> 
 	enemy.position = pos
 	enemy.patrol_range = patrol_range
 	$Enemies.add_child(enemy)
+
+func _on_plate_state_changed(_is_pressed: bool) -> void:
+	# Only the server acts as the authority to trigger level completion
+	if not multiplayer.multiplayer_peer or multiplayer.is_server():
+		# Group plates by button_id
+		var groups = {}
+		var all_plates = get_tree().get_nodes_in_group("pressure_plates")
+		for plate in all_plates:
+			var bid = plate.get("button_id")
+			if bid != "":
+				if not groups.has(bid):
+					groups[bid] = []
+				groups[bid].append(plate)
+				
+		# Check if any group has all its plates pressed simultaneously
+		for bid in groups:
+			var all_pressed = true
+			for plate in groups[bid]:
+				if not plate.is_pressed:
+					all_pressed = false
+					break
+			if all_pressed:
+				if bid == "finish":
+					sync_level_finished.rpc()
+
+@rpc("any_peer", "call_local", "reliable")
+func sync_level_finished() -> void:
+	sync_pause(true) # Pause player physics/inputs
+	
+	# Show level finished screen
+	if not $UI.has_node("FinishedScreen"):
+		var finished_script = preload("res://scripts/finished_screen.gd")
+		var finished_screen = Control.new()
+		finished_screen.set_script(finished_script)
+		finished_screen.name = "FinishedScreen"
+		$UI.add_child(finished_screen)
+	else:
+		$UI/FinishedScreen.show()

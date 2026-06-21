@@ -8,8 +8,12 @@ var direction: float = -1.0
 var spawn_x: float
 var spawn_pos: Vector2
 var wiggle_seed: float = 0.0
+var active_wind_drafts: Array = []
+var rotation_speed: float = 0.0
+var visual_rotation: float = 0.0
 
 func _ready() -> void:
+	platform_floor_layers = 0
 	spawn_pos = position
 	spawn_x = position.x
 	
@@ -44,10 +48,11 @@ func _ready() -> void:
 	hitbox.body_entered.connect(_on_hitbox_body_entered)
 
 @rpc("any_peer", "unreliable")
-func sync_enemy_state(pos: Vector2, dir: float) -> void:
+func sync_enemy_state(pos: Vector2, dir: float, rot: float) -> void:
 	if not is_multiplayer_authority_local():
 		position = pos
 		direction = dir
+		visual_rotation = rot
 
 func is_multiplayer_authority_local() -> bool:
 	if not multiplayer.has_multiplayer_peer() or multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
@@ -67,19 +72,51 @@ func _physics_process(delta: float) -> void:
 		queue_redraw()
 		return
 
-	if not is_on_floor():
-		velocity.y += gravity * delta
-		
-	# Patrol horizontally
-	if abs(position.x - spawn_x) > patrol_range:
-		direction = -sign(position.x - spawn_x)
-		
-	if is_on_wall():
-		direction = -direction
-		
-	velocity.x = direction * speed
-	move_and_slide()
+	var is_gravity_disabled = false
+	var wind_push = Vector2.ZERO
+	var has_wind = false
 	
+	var valid_drafts = []
+	for draft in active_wind_drafts:
+		if is_instance_valid(draft):
+			valid_drafts.append(draft)
+			if draft.get("is_on") == true:
+				is_gravity_disabled = true
+				has_wind = true
+				var wind_dir = draft.get_wind_direction_vector()
+				var wind_speed = draft.speed
+				wind_push += wind_dir * wind_speed
+	active_wind_drafts = valid_drafts
+
+	if not is_on_floor():
+		if not is_gravity_disabled:
+			velocity.y += gravity * delta
+			if velocity.y > 700.0:
+				velocity.y = 700.0
+		
+	# Apply wind draft velocity
+	if has_wind:
+		if abs(wind_push.x) > 0.01:
+			velocity.x = wind_push.x
+		if abs(wind_push.y) > 0.01:
+			velocity.y = wind_push.y
+	else:
+		if is_on_floor():
+			# Patrol horizontally
+			if abs(position.x - spawn_x) > patrol_range:
+				direction = -sign(position.x - spawn_x)
+				
+			if is_on_wall():
+				direction = -direction
+				
+			velocity.x = direction * speed
+		else:
+			# In the air: carry horizontal momentum but bounce off walls
+			if is_on_wall():
+				velocity.x = -velocity.x
+				if abs(velocity.x) > 0.01:
+					direction = sign(velocity.x)
+		
 	# Check for spike collisions (using the editor-defined custom collision shapes of the spike tile)
 	var level = get_tree().current_scene
 	if level:
@@ -90,7 +127,7 @@ func _physics_process(delta: float) -> void:
 					global_position, # bottom
 					global_position + Vector2(0, -8) # lower body
 				]
-				var died = false
+				var touched_spike = false
 				for pt in check_points:
 					var local_pt = child.to_local(pt)
 					var map_pos = child.local_to_map(local_pt)
@@ -104,17 +141,30 @@ func _physics_process(delta: float) -> void:
 						for i in range(poly_count):
 							var poly_points = tile_data.get_collision_polygon_points(0, i)
 							if Geometry2D.is_point_in_polygon(rel_pos, poly_points):
-								die_by_bullet()
-								died = true
+								touched_spike = true
 								break
-					if died:
+					if touched_spike:
 						break
-				if died:
+				if touched_spike:
+					velocity.y = randf_range(-500.0, -350.0)
+					velocity.x = randf_range(-150.0, 150.0)
+					if abs(velocity.x) > 0.01:
+						direction = sign(velocity.x)
+					rotation_speed = randf_range(5.0, 12.0) * (-1.0 if randf() < 0.5 else 1.0)
 					break
+		
+	move_and_slide()
 	
-	# Send position update to clients
+	# Apply rotation logic based on air state
+	if not is_on_floor():
+		visual_rotation += rotation_speed * delta
+	else:
+		rotation_speed = 0.0
+		visual_rotation = rotate_toward(visual_rotation, 0.0, 5.0 * delta)
+	
+	# Send position and rotation update to clients
 	if multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
-		sync_enemy_state.rpc(position, direction)
+		sync_enemy_state.rpc(position, direction, visual_rotation)
 	
 	wiggle_seed += delta
 	queue_redraw()
@@ -122,7 +172,11 @@ func _physics_process(delta: float) -> void:
 func _draw() -> void:
 	var color = Color("#323232") # Dark pencil lead
 	var pen_width = 3.0
-	var center = Vector2(0, -12)
+	
+	# Rotate the drawing around the center of the spiked ball (0, -12)
+	draw_set_transform(Vector2(0, -12), visual_rotation, Vector2.ONE)
+	
+	var center = Vector2.ZERO
 	var radius = 10.0
 	
 	# Draw a spiked ball (procedural points alternating between normal and spike radii)
@@ -147,10 +201,11 @@ func _draw() -> void:
 	draw_line(center + Vector2(4, -3), center + Vector2(1, -4), color, 2.0)
 
 func die_by_bullet() -> void:
-	# Inform Main of the death so it can schedule a respawn
-	var main = get_tree().current_scene
-	if main and main.has_method("_on_enemy_died"):
-		main._on_enemy_died(name, spawn_pos, patrol_range)
+	# Inform Main of the death so it can schedule a respawn (only for standard level enemies)
+	if not name.begins_with("SpawnerEnemy"):
+		var main = get_tree().current_scene
+		if main and main.has_method("_on_enemy_died"):
+			main._on_enemy_died(name, spawn_pos, patrol_range)
 	sync_die.rpc()
 
 @rpc("any_peer", "call_local", "reliable")

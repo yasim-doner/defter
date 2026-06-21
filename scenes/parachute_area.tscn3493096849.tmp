@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://cx6i8d7f2ghk"]
+
+[ext_resource type="Script" uid="uid://lini02uveomg" path="res://scripts/parachute_area.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://ouqk1pp7ub1l" path="res://assets/parasut.png" id="2_texture"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_trigger"]
+radius = 48.0
+
+[node name="Parachute" type="Area2D" unique_id=1402296586]
+script = ExtResource("1_script")
+parachute_duration = null
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=583365050]
+shape = SubResource("CircleShape2D_trigger")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=465389497]
+position = Vector2(0, -153.5)
+texture = ExtResource("2_texture")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1501300398]
+polygon = PackedVector2Array(-96, -151, -68, -216, 63, -218, 108, -151, 91, -149, 60, -200, -62, -198, -82, -149)
+
+[node name="Marker2D" type="Marker2D" parent="." unique_id=1555677134]
+position = Vector2(15, -96)

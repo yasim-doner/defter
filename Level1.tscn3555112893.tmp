@@ -13,7 +13,6 @@
 [ext_resource type="Script" uid="uid://cspuijuj3gddk" path="res://scripts/death_screen.gd" id="10_death"]
 [ext_resource type="PackedScene" uid="uid://ngrwcp3h2mqr" path="res://scenes/wind_draft.tscn" id="12_aiv1b"]
 [ext_resource type="PackedScene" path="res://scenes/wind_switch.tscn" id="13_switch"]
-[ext_resource type="PackedScene" uid="uid://c4n1t8vyu7r05" path="res://scenes/pressure_plate.tscn" id="14_plate"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
 radius = 8.0
@@ -56,12 +55,19 @@ texture_region_size = Vector2i(128, 128)
 2:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-35.46997, 7.710861, -40.867577, 7.710861, -33.542255, -16.578358, -35.855515, -64, -28.915741, -64, -26.988022, -18.506075)
 2:3/0/physics_layer_0/polygon_1/points = PackedVector2Array(29.301285, -64, 28.530197, -20.43379, 40.09649, 3.0843468, 44.337463, 4.6265182, 35.46997, -20.819332, 35.084427, -64)
 
+[sub_resource type="TileSetScenesCollectionSource" id="TileSetScenesCollectionSource_wapi5"]
+scenes/1/scene = ExtResource("9_5g1s2")
+scenes/2/scene = ExtResource("9_aiv1b")
+scenes/3/scene = ExtResource("12_aiv1b")
+scenes/4/scene = ExtResource("13_switch")
+
 [sub_resource type="TileSet" id="TileSet_dxoup"]
 tile_size = Vector2i(128, 128)
 physics_layer_0/collision_layer = 1
 custom_data_layer_0/name = "is_spike"
 custom_data_layer_0/type = 1
 sources/0 = SubResource("TileSetAtlasSource_5g1s2")
+sources/1 = SubResource("TileSetScenesCollectionSource_wapi5")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
 bg_color = Color(0.992157, 0.984314, 0.968627, 1)
@@ -110,10 +116,6 @@ texture = ExtResource("7_page1")
 
 [node name="Pens" type="Node2D" parent="." unique_id=409736343]
 
-[node name="Pen3" type="Area2D" parent="Pens" unique_id=1526827075]
-position = Vector2(575.40405, 3373.7285)
-script = ExtResource("5_pen")
-
 [node name="Pen2" type="Area2D" parent="Pens" unique_id=581298130]
 position = Vector2(2071, 912)
 script = ExtResource("5_pen")
@@ -145,7 +147,7 @@ script = ExtResource("3_gun")
 [node name="Bullets" type="Node2D" parent="." unique_id=1491174582]
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1876221026]
-tile_map_data = PackedByteArray("AAABABgAAAAAAAEAAAACABgAAAAAAAEAAAADABgAAAAAAAEAAAAEABgAAAAAAAEAAAAFABgAAAAAAAIAACAJABgAAAAAAAAAAAAKABgAAAAAAAEAAAALABgAAAAAAAEAAAAOABoAAAACAAAAAAAPABoAAAADAAAAAAARABUAAAAEAAIAAAARABIAAAAEAAIAAAARABMAAAAEAAIAAAARABQAAAAEAAIAAAARABAAAAAEAAIAAAARABEAAAAEAAIAAAARAA0AAAAEAAIAAAARAA4AAAAEAAIAAAARAA8AAAAEAAIAAAARAAwAAAAEAAIAAAARAAkAAAAEAAIAAAARAAoAAAAEAAIAAAARAAsAAAAEAAIAAAARAAgAAAAEAAIAAAAPAAcAAAAAAAEAAAAQAAcAAAAAAAEAAAAMABoAAAAEAAAAAAALABoAAAACAAAAAAAGABoAAAACAAAAAAAHABoAAAADAAAAAAAIABoAAAAEAAAAAAAQABkAAAAAAAEAAAAHABgAAAAAAAIAAAAQABoAAAAEAAAAAAARABoAAAACAAAAAGARABkAAAAEAAAAAGASABkAAAAAAAMAAAARABYAAAAEAAIAAAARABcAAAAEAAMAAAANAAAAAAACAAEAAAANAAEAAAACAAIAAAANAAIAAAACAAIAAAANAAMAAAACAAMAAAALAAQAAAAAAAAAAAAKAAQAAAAAAAAAAAAJABoAAAAAAAMAACAKABoAAAAAAAMAACAMABsAAAAAAAMAAHAOABsAAAAAAAMAAGARAAcAAAAEAAEAAAAEABoAAAAAAAAAAAA=")
+tile_map_data = PackedByteArray("AAABABgAAAAAAAEAAAACABgAAAAAAAEAAAADABgAAAAAAAEAAAAEABgAAAAAAAEAAAAFABgAAAAAAAIAACAJABgAAAAAAAAAAAAKABgAAAAAAAEAAAALABgAAAAAAAEAAAAOABoAAAACAAAAAAAPABoAAAADAAAAAAARABUAAAAEAAIAAAARABIAAAAEAAIAAAARABMAAAAEAAIAAAARABQAAAAEAAIAAAARABAAAAAEAAIAAAARABEAAAAEAAIAAAARAA0AAAAEAAIAAAARAA4AAAAEAAIAAAARAA8AAAAEAAIAAAARAAwAAAAEAAIAAAARAAkAAAAEAAIAAAARAAoAAAAEAAIAAAARAAsAAAAEAAIAAAARAAgAAAAEAAIAAAAPAAcAAAAAAAEAAAAQAAcAAAAAAAEAAAAMABoAAAAEAAAAAAALABoAAAACAAAAAAAGABoAAAACAAAAAAAHABoAAAADAAAAAAAIABoAAAAEAAAAAAAQABkAAAAAAAEAAAAHABgAAAAAAAIAAAAQABoAAAAEAAAAAAARABoAAAACAAAAAGARABkAAAAEAAAAAGASABkAAAAAAAMAAAARABYAAAAEAAIAAAARABcAAAAEAAMAAAANAAAAAAACAAEAAAANAAEAAAACAAIAAAANAAIAAAACAAIAAAANAAMAAAACAAMAAAALAAQAAAAAAAAAAAAKAAQAAAAAAAAAAAAJABoAAAAAAAMAACAKABoAAAAAAAMAACAMABsAAAAAAAMAAHAOABsAAAAAAAMAAGARAAcAAAAEAAEAAAA=")
 tile_set = SubResource("TileSet_dxoup")
 
 [node name="Chute" parent="." unique_id=1557057324 instance=ExtResource("9_5g1s2")]
@@ -166,7 +168,7 @@ speed = 0.0
 
 [node name="WindDraft" parent="." unique_id=1727304534 instance=ExtResource("12_aiv1b")]
 position = Vector2(1726, 2022)
-speed = 500.0
+speed = 600.0
 is_on = false
 height = 3150.0
 
@@ -175,12 +177,7 @@ position = Vector2(1970, 899)
 wind_draft_path = NodePath("../WindDraft")
 
 [node name="ParachuteArea" parent="." unique_id=1983574243 instance=ExtResource("8_parachute")]
-position = Vector2(1366, 3104)
-parachute_duration = 100.0
-
-[node name="ParachuteArea2" parent="." unique_id=1721257749 instance=ExtResource("8_parachute")]
-position = Vector2(1356, 3405)
-parachute_duration = 3.0
+position = Vector2(1378, 3069)
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1795732186]
 
@@ -344,9 +341,3 @@ theme_override_font_sizes/font_size = 20
 text = "Press [E] to Glide"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="PressurePlate1" parent="." unique_id=987654321 instance=ExtResource("14_plate")]
-position = Vector2(1315, 604)
-
-[node name="PressurePlate2" parent="." unique_id=987654322 instance=ExtResource("14_plate")]
-position = Vector2(1448, 605)

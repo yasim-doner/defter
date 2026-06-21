@@ -8,6 +8,10 @@ const AIR_ACCELERATION = 900.0
 const AIR_FRICTION = 600.0
 const COYOTE_TIME = 0.12 # 120ms jump window after walking off ledges
 const JUMP_BUFFER_TIME = 0.12 # 120ms jump input buffer
+const SPRINT_SPEED = 360.0      # top speed once the sprint has ramped up
+const SPRINT_RAMP = 1.0         # seconds of running to reach full sprint
+const FALL_GRAVITY_MULT = 1.3   # heavier gravity while falling (momentum)
+const TERMINAL_FALL = 1150.0    # max fall speed
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity", 980.0)
 
@@ -50,6 +54,9 @@ var _vis_scale: Vector2 = Vector2.ONE
 var _idle_t: float = 0.0
 var _jump_phase: String = ""   # "", launch, rise, tofall, fall, land
 var _was_on_floor: bool = true
+var _run_trans: bool = false   # playing the idle->run start transition
+var _prev_ground: String = "idle"
+var _sprint_t: float = 0.0     # 0 = base speed, 1 = full sprint
 
 # Parachute (paraşüt) feature
 var is_parachute_active: bool = false
@@ -296,13 +303,16 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("jump"):
 		jump_buffer_timer = JUMP_BUFFER_TIME
 
-	# Apply gravity (with Celeste-style gravity scaling at the peak of the jump)
+	# Apply gravity (Celeste-style float at the apex, heavier on the way down)
 	if not is_on_floor():
 		var active_gravity = gravity
 		if abs(velocity.y) < 70.0 and Input.is_action_pressed("jump"):
-			active_gravity = gravity * 0.55
+			active_gravity = gravity * 0.55          # floaty apex
+		elif velocity.y > 0.0:
+			active_gravity = gravity * FALL_GRAVITY_MULT  # falling momentum
 		velocity.y += active_gravity * delta
-		
+		velocity.y = minf(velocity.y, TERMINAL_FALL)     # terminal velocity
+
 		# If parachute is active, only cap the falling/downward speed to create a glide
 		if is_parachute_active and velocity.y > 90.0:
 			velocity.y = 90.0
@@ -322,8 +332,19 @@ func _physics_process(delta: float) -> void:
 	var active_accel = ACCELERATION if is_on_floor() else AIR_ACCELERATION
 	var active_frict = FRICTION if is_on_floor() else AIR_FRICTION
 
+	# Sprint momentum: holding a steady ground direction ramps the top speed up;
+	# reversing kills it; airborne keeps it so a running jump carries the speed.
+	if is_on_floor():
+		if direction == 0.0:
+			_sprint_t = maxf(_sprint_t - delta / (SPRINT_RAMP * 0.5), 0.0)
+		elif velocity.x != 0.0 and signf(direction) != signf(velocity.x):
+			_sprint_t = 0.0
+		else:
+			_sprint_t = minf(_sprint_t + delta / SPRINT_RAMP, 1.0)
+	var top_speed: float = lerp(SPEED, SPRINT_SPEED, _sprint_t)
+
 	if direction:
-		velocity.x = move_toward(velocity.x, direction * SPEED, active_accel * delta)
+		velocity.x = move_toward(velocity.x, direction * top_speed, active_accel * delta)
 		if not (has_node("DrawnGun") and $DrawnGun.lines.size() > 0):
 			facing_right = direction > 0
 		walk_time += delta * 12.0
@@ -425,6 +446,8 @@ func _enter_phase(p: String) -> void:
 func _on_sprite_anim_finished() -> void:
 	if _ONESHOT_NEXT.has(_jump_phase):
 		_enter_phase(_ONESHOT_NEXT[_jump_phase])
+	if _anim == "run_trans":
+		_run_trans = false   # transition done -> fall through to the run loop
 
 # Drive the AnimatedSprite2D: jump FSM + ground states, speed scaling, and the
 # momentum lean / squash-stretch feel layer.
@@ -445,10 +468,21 @@ func _update_sprite(delta: float, vel: Vector2, on_floor: bool, face: float, hol
 	_was_on_floor = on_floor
 
 	# Resolve the clip (+ a generic label for the feel layer).
-	var st: String = _jump_phase if _jump_phase != "" else _ground_state(vel)
-	var clip: String = st
+	var st: String
+	var clip: String
 	if _jump_phase != "":
+		st = _jump_phase
 		clip = _PHASE_CLIP[_jump_phase]
+	else:
+		var ground := _ground_state(vel)
+		# Start-running transition: idle -> run_trans (one-shot) -> run.
+		if _prev_ground == "idle" and ground != "idle" and _has_clip("run_trans"):
+			_run_trans = true
+		if ground == "idle":
+			_run_trans = false
+		_prev_ground = ground
+		st = "run_trans" if _run_trans else ground
+		clip = st
 	if not _has_clip(clip):
 		clip = "run" if absf(vel.x) > 12.0 else "idle"   # fallback while art is missing
 	if clip != _anim:
@@ -457,7 +491,9 @@ func _update_sprite(delta: float, vel: Vector2, on_floor: bool, face: float, hol
 			sprite.play(clip)
 
 	if st == "run" or st == "walk":
-		sprite.speed_scale = clampf(absf(vel.x) / (SPEED * 0.5), 0.6, 2.2)
+		# Match the leg cadence to ground speed (~1.0 at full run) so it no
+		# longer looks like a frantic sprint while moving slowly.
+		sprite.speed_scale = clampf(absf(vel.x) / SPEED, 0.5, 1.6)
 	else:
 		sprite.speed_scale = 1.0
 
@@ -484,15 +520,10 @@ func _update_sprite(delta: float, vel: Vector2, on_floor: bool, face: float, hol
 	var cscale: float = SPRITE_CLIP_SCALE.get(clip, 1.0)
 	sprite.scale = _vis_scale * (SPRITE_BASE_SCALE * cscale)
 
-	# Final orientation: momentum lean + a gentle idle breathing bob/sway.
-	if st == "idle":
-		_idle_t += delta
-		sprite.position = Vector2(0, sin(_idle_t * 2.2) * 1.5)
-		sprite.rotation = _lean + sin(_idle_t * 1.3) * 0.02
-	else:
-		_idle_t = 0.0
-		sprite.position = Vector2.ZERO
-		sprite.rotation = _lean
+	# Orientation: momentum lean only. The idle clip is now hand-animated
+	# (7 frames), so no code-side breathing is needed.
+	sprite.position = Vector2.ZERO
+	sprite.rotation = _lean
 
 func _draw() -> void:
 	if not use_frames:

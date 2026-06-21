@@ -56,10 +56,17 @@ var is_parachute_active: bool = false
 var parachute_timer: float = 0.0
 var is_near_parachute_area: bool = false
 var active_parachute_area: Area2D = null
-var parachute_texture: Texture2D = preload("res://assets/parasut.png")
+var active_parachute_node: Area2D = null
+var is_parachute_broken: bool = false
+var parachute_hold_time: float = 0.0
+const PARACHUTE_HOLD_REQUIRED: float = 1.0
 var teleport_cooldown: float = 0.0
+var active_wind_drafts: Array = []
+var active_interactables: Array = []
+var is_noclip: bool = false
 
 func _ready() -> void:
+	platform_floor_layers = 0
 	_setup_input_actions()
 	if name == "Player1":
 		player_id = 1
@@ -68,6 +75,8 @@ func _ready() -> void:
 		player_id = 2
 		pen_color = Color("#1a3a60") # Blue pen ink
 	_setup_sprite()
+	
+	pass
 
 # Per-player frame set (p1 = şapka, p2 = bandana); shared set as fallback.
 func _frames_path() -> String:
@@ -139,7 +148,9 @@ func _setup_input_actions() -> void:
 		"move_left": [KEY_A, KEY_LEFT],
 		"move_right": [KEY_D, KEY_RIGHT],
 		"jump": [KEY_W, KEY_SPACE, KEY_UP],
-		"interact": [KEY_E]
+		"interact": [KEY_E],
+		"move_down": [KEY_S, KEY_DOWN],
+		"noclip": [KEY_V]
 	}
 	
 	for action in actions:
@@ -167,6 +178,8 @@ func sync_weapon_drawing(new_lines: Array) -> void:
 			$DrawnGun.lines = new_lines
 
 func die() -> void:
+	if is_noclip:
+		return
 	# Endless game: respawn immediately at spawn point and clear gun
 	if is_local():
 		if is_parachute_active:
@@ -174,6 +187,10 @@ func die() -> void:
 		_respawn()
 
 func _respawn() -> void:
+	is_noclip = false
+	is_parachute_broken = false
+	if has_node("CollisionShape2D"):
+		$CollisionShape2D.set_deferred("disabled", false)
 	velocity = Vector2.ZERO
 	set_weapon_lines([])
 	if spawn_position != Vector2.ZERO:
@@ -188,12 +205,16 @@ func _input(event: InputEvent) -> void:
 	if not is_local():
 		return
 		
+	if event.is_action_pressed("noclip"):
+		is_noclip = not is_noclip
+		if has_node("CollisionShape2D"):
+			$CollisionShape2D.set_deferred("disabled", is_noclip)
+		
 	if event.is_action_pressed("interact"):
-		if is_near_parachute_area and not is_parachute_active:
-			var duration = 10.0
-			if active_parachute_area and "parachute_duration" in active_parachute_area:
-				duration = active_parachute_area.parachute_duration
-			sync_activate_parachute.rpc(duration)
+		var current_interactable = active_interactables.back() if not active_interactables.is_empty() else null
+		if current_interactable:
+			if current_interactable.has_method("interact"):
+				current_interactable.interact(self)
 			
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -210,16 +231,88 @@ func _input(event: InputEvent) -> void:
 					sync_shoot.rpc(spawn_pos, dir)
 
 @rpc("any_peer", "call_local", "reliable")
-func sync_activate_parachute(duration: float) -> void:
+func sync_activate_parachute_path(parachute_path: NodePath, duration: float = 10.0) -> void:
 	is_parachute_active = true
-	parachute_timer = duration
+	if not has_node("Parachute"):
+		var parachute_scene = load("res://scenes/parachute.tscn")
+		if parachute_scene:
+			var parachute = parachute_scene.instantiate()
+			parachute.name = "Parachute"
+			parachute.player = self
+			parachute.parachute_duration = duration
+			add_child(parachute)
+			active_parachute_node = parachute
+			parachute.activate()
+	else:
+		active_parachute_node = get_node("Parachute")
+		active_parachute_node.parachute_duration = duration
+		active_parachute_node.activate()
 	queue_redraw()
 
 @rpc("any_peer", "call_local", "reliable")
-func sync_deactivate_parachute() -> void:
+func sync_deactivate_parachute_path() -> void:
 	is_parachute_active = false
-	parachute_timer = 0.0
+	if active_parachute_node:
+		if is_instance_valid(active_parachute_node):
+			active_parachute_node.queue_free()
+		active_parachute_node = null
 	queue_redraw()
+
+@rpc("any_peer", "call_local", "reliable")
+func sync_shoot_parachute(launch_velocity: Vector2) -> void:
+	is_parachute_active = false
+	if active_parachute_node and is_instance_valid(active_parachute_node):
+		active_parachute_node.velocity = launch_velocity
+		active_parachute_node.is_active = false
+		if "reattach_cooldown" in active_parachute_node:
+			active_parachute_node.reattach_cooldown = 1.0
+		
+		# Reparent to root so we move independently
+		var old_global_pos = active_parachute_node.global_position
+		if active_parachute_node.get_parent():
+			active_parachute_node.get_parent().remove_child(active_parachute_node)
+		get_tree().current_scene.add_child(active_parachute_node)
+		active_parachute_node.global_position = old_global_pos
+		
+		active_parachute_node = null
+	queue_redraw()
+
+@rpc("any_peer", "call_local", "reliable")
+func sync_catch_parachute(parachute_path: NodePath) -> void:
+	is_parachute_active = true
+	var parachute = get_node_or_null(parachute_path)
+	if parachute and is_instance_valid(parachute):
+		# Reparent to this player
+		if parachute.get_parent():
+			parachute.get_parent().remove_child(parachute)
+		add_child(parachute)
+		parachute.name = "Parachute"
+		parachute.player = self
+		active_parachute_node = parachute
+		
+		# Reactivate it
+		parachute.is_active = true
+		parachute.active_duration = parachute.parachute_duration
+		
+		# Enable canopy collision polygon
+		var canopy = parachute.get_node_or_null("CollisionPolygon2D")
+		if canopy:
+			canopy.set_deferred("disabled", false)
+			
+	queue_redraw()
+
+@rpc("any_peer", "call_local", "reliable")
+func sync_activate_parachute(duration: float = 10.0) -> void:
+	pass
+
+@rpc("any_peer", "call_local", "reliable")
+func sync_deactivate_parachute() -> void:
+	sync_deactivate_parachute_path()
+
+func destroy_parachute() -> void:
+	is_parachute_broken = true
+	if is_instance_valid(active_parachute_node):
+		active_parachute_node.destroy_parachute()
 
 @rpc("any_peer", "call_local", "reliable")
 func sync_shoot(bullet_pos: Vector2, bullet_dir: Vector2) -> void:
@@ -260,12 +353,28 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 
-	# Update parachute timer for both local and remote players
-	if is_parachute_active:
-		parachute_timer -= delta
-		if parachute_timer <= 0.0:
-			is_parachute_active = false
-			queue_redraw()
+	if is_on_floor():
+		is_parachute_broken = false
+
+	# Input-based parachute activation for local player
+	if is_local() and not is_noclip:
+		if is_near_parachute_area and not is_parachute_active and not is_parachute_broken:
+			if Input.is_action_pressed("interact"):
+				parachute_hold_time += delta
+				queue_redraw()
+				if parachute_hold_time >= PARACHUTE_HOLD_REQUIRED:
+					parachute_hold_time = 0.0
+					queue_redraw()
+					if is_instance_valid(active_parachute_area):
+						active_parachute_area.activate_parachute(self)
+			else:
+				if parachute_hold_time > 0.0:
+					parachute_hold_time = 0.0
+					queue_redraw()
+		else:
+			if parachute_hold_time > 0.0:
+				parachute_hold_time = 0.0
+				queue_redraw()
 
 	if not is_local():
 		# Remote player: drive the rig from synced state, skip inputs/movement
@@ -276,6 +385,43 @@ func _physics_process(delta: float) -> void:
 		_drive_visual(delta, velocity, r_on_floor, r_face, r_holding, r_aim)
 		return
 
+	if is_noclip:
+		var h_dir = Input.get_axis("move_left", "move_right")
+		var v_dir = Input.get_axis("jump", "move_down")
+		velocity.x = h_dir * SPEED * 2.0
+		velocity.y = v_dir * SPEED * 2.0
+		
+		move_and_slide()
+		
+		# Send updated local player state to the remote peer
+		var gun_rot = 0.0
+		if has_node("DrawnGun") and $DrawnGun.lines.size() > 0:
+			var mouse_pos = get_global_mouse_position()
+			facing_right = mouse_pos.x > global_position.x
+			
+			var flip = 1.0 if facing_right else -1.0
+			$DrawnGun.position = Vector2(14 * flip, -26)
+			
+			var direction_to_mouse = (mouse_pos - $DrawnGun.global_position).normalized()
+			var target_angle = direction_to_mouse.angle()
+			
+			if facing_right:
+				$DrawnGun.scale = Vector2(1.0, 1.0)
+			else:
+				$DrawnGun.scale = Vector2(1.0, -1.0)
+			$DrawnGun.rotation = target_angle
+			gun_rot = target_angle
+			
+		if multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
+			sync_state.rpc(position, velocity, facing_right, gun_rot)
+			
+		# Drive visual rig and redraw
+		var holding: bool = has_node("DrawnGun") and $DrawnGun.lines.size() > 0
+		var aim: float = gun_rot if holding else NAN
+		var face: float = 1.0 if facing_right else -1.0
+		_drive_visual(delta, velocity, true, face, holding, aim)
+		return
+
 	# Update teleport cooldown for local player
 	if teleport_cooldown > 0.0:
 		teleport_cooldown -= delta
@@ -283,7 +429,14 @@ func _physics_process(delta: float) -> void:
 	# Update interaction prompt visibility for local player
 	var prompt = get_node_or_null("/root/Level1/UI/InteractionPrompt")
 	if prompt:
-		prompt.visible = is_near_parachute_area and not is_parachute_active
+		var current_interactable = active_interactables.back() if not active_interactables.is_empty() else null
+		if current_interactable:
+			prompt.text = current_interactable.get("prompt_text") if "prompt_text" in current_interactable else "Press E to Interact"
+			prompt.visible = true
+		else:
+			prompt.visible = is_near_parachute_area and not is_parachute_active
+			if prompt.visible:
+				prompt.text = "Hold E to Glide"
 
 	# Update coyote jump window
 	if is_on_floor():
@@ -297,15 +450,40 @@ func _physics_process(delta: float) -> void:
 		jump_buffer_timer = JUMP_BUFFER_TIME
 
 	# Apply gravity (with Celeste-style gravity scaling at the peak of the jump)
+	var is_gravity_disabled = false
+	var wind_push = Vector2.ZERO
+	var has_wind = false
+	
+	if is_parachute_active:
+		var valid_drafts = []
+		for draft in active_wind_drafts:
+			if is_instance_valid(draft) and draft.get("is_on") == true:
+				valid_drafts.append(draft)
+				is_gravity_disabled = true
+				has_wind = true
+				var wind_dir = draft.get_wind_direction_vector()
+				var wind_speed = draft.speed
+				wind_push += wind_dir * wind_speed
+		active_wind_drafts = valid_drafts
+
 	if not is_on_floor():
-		var active_gravity = gravity
-		if abs(velocity.y) < 70.0 and Input.is_action_pressed("jump"):
-			active_gravity = gravity * 0.55
-		velocity.y += active_gravity * delta
-		
-		# If parachute is active, only cap the falling/downward speed to create a glide
-		if is_parachute_active and velocity.y > 90.0:
-			velocity.y = 90.0
+		if not is_gravity_disabled:
+			var active_gravity = gravity
+			if abs(velocity.y) < 70.0 and Input.is_action_pressed("jump"):
+				active_gravity = gravity * 0.55
+			velocity.y += active_gravity * delta
+			
+			# If parachute is active, only cap the falling/downward speed to create a glide
+			if is_parachute_active and velocity.y > 90.0:
+				velocity.y = 90.0
+
+	# Apply wind draft velocity if parachute is active
+	if has_wind:
+		var wind_accel = 2000.0
+		if abs(wind_push.x) > 0.01:
+			velocity.x = move_toward(velocity.x, wind_push.x, wind_accel * delta)
+		if abs(wind_push.y) > 0.01:
+			velocity.y = move_toward(velocity.y, wind_push.y, wind_accel * delta)
 
 	# Trigger jump if within coyote and jump buffer windows
 	if jump_buffer_timer > 0.0 and coyote_timer > 0.0:
@@ -498,8 +676,24 @@ func _draw() -> void:
 	if not use_frames:
 		rig.draw(self, pen_color, 3.5)
 
-	# Parachute overlay — drawn above the character in either render mode.
-	if is_parachute_active and parachute_texture:
-		var tex_size = parachute_texture.get_size()
-		var dest_rect = Rect2(Vector2(-tex_size.x / 2.0, -25.5 - tex_size.y / 2.0), tex_size)
-		draw_texture_rect(parachute_texture, dest_rect, false)
+	# Draw loading E circle if holding E near parachute trigger
+	if parachute_hold_time > 0.0 and is_instance_valid(active_parachute_area):
+		var center = Vector2(0, -55) # Position above player's head
+		var radius = 16.0
+		var progress = parachute_hold_time / PARACHUTE_HOLD_REQUIRED
+		
+		# Draw background circle outline (faint graphite)
+		draw_arc(center, radius, 0, PI * 2, 32, Color(0.6, 0.6, 0.6, 0.3), 3.0, true)
+		# Draw progress fill arc
+		draw_arc(center, radius, -PI / 2, -PI / 2 + progress * PI * 2, 32, pen_color, 3.0, true)
+		
+		# Draw a hand-drawn look 'E' inside the circle
+		var line_color = pen_color
+		var e_left = center.x - 4
+		var e_right = center.x + 4
+		var e_top = center.y - 5
+		var e_bottom = center.y + 5
+		draw_line(Vector2(e_left, e_top), Vector2(e_left, e_bottom), line_color, 2.0) # spine
+		draw_line(Vector2(e_left, e_top), Vector2(e_right, e_top), line_color, 2.0) # top bar
+		draw_line(Vector2(e_left, center.y), Vector2(e_right - 2, center.y), line_color, 2.0) # middle bar
+		draw_line(Vector2(e_left, e_bottom), Vector2(e_right, e_bottom), line_color, 2.0) # bottom bar

@@ -78,7 +78,7 @@ func _physics_process(delta: float) -> void:
 	
 	var valid_drafts = []
 	for draft in active_wind_drafts:
-		if is_instance_valid(draft):
+		if is_instance_valid(draft) and draft.has_method("get_wind_direction_vector"):
 			valid_drafts.append(draft)
 			if draft.get("is_on") == true:
 				is_gravity_disabled = true

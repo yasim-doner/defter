@@ -464,7 +464,7 @@ func _physics_process(delta: float) -> void:
 	if is_parachute_active:
 		var valid_drafts = []
 		for draft in active_wind_drafts:
-			if is_instance_valid(draft) and draft.get("is_on") == true:
+			if is_instance_valid(draft) and draft.has_method("get_wind_direction_vector") and draft.get("is_on") == true:
 				valid_drafts.append(draft)
 				is_gravity_disabled = true
 				has_wind = true

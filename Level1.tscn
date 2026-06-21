@@ -176,7 +176,7 @@ wind_draft_path = NodePath("../WindDraft")
 
 [node name="ParachuteArea" parent="." unique_id=1983574243 instance=ExtResource("8_parachute")]
 position = Vector2(1366, 3104)
-parachute_duration = 100.0
+parachute_duration = 6.0
 
 [node name="ParachuteArea2" parent="." unique_id=1721257749 instance=ExtResource("8_parachute")]
 position = Vector2(1356, 3405)

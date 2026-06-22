@@ -11,6 +11,11 @@ var velocity: Vector2 = Vector2.ZERO
 var parachute_gravity: float = 800.0
 var lifetime: float = 1.5
 var reattach_cooldown: float = 0.0
+var bounce_count: int = 0
+
+# Bounce configuration
+const BOUNCE_RESTITUTION: float = 1.6
+const BOUNCE_MIN_VELOCITY: float = -600.0
 
 # Ride variables removed
 
@@ -28,6 +33,7 @@ func activate() -> void:
 	is_active = true
 	active_duration = parachute_duration
 	velocity = Vector2.ZERO
+	bounce_count = 0
 	
 	sprite.visible = true
 	canopy_collision.disabled = false
@@ -145,7 +151,7 @@ func _on_body_entered(body: Node2D) -> void:
 			destroy_parachute()
 			return
 			
-		if body.has_method("die_by_bullet") or body.name.begins_with("Enemy") or body.name.begins_with("SpawnerEnemy"):
+		if body.has_method("is_letter") or body.has_method("die_by_bullet") or body.name.begins_with("Enemy") or body.name.begins_with("SpawnerEnemy"):
 			# Ricochet the enemy off the parachute instead of killing them
 			var bounce_dir = (body.global_position - global_position).normalized()
 			if bounce_dir.y > -0.2:
@@ -164,33 +170,47 @@ func _on_body_entered(body: Node2D) -> void:
 			var other_player = body
 			if is_instance_valid(player) and other_player.has_method("is_local") and other_player.is_local():
 				var relative_y = other_player.global_position.y - player.global_position.y
+				var bounced = false
 				if relative_y < -60.0 and other_player.velocity.y >= -150.0:
-					var e = 1.4
+					var e = BOUNCE_RESTITUTION
 					var v1 = other_player.velocity.y
 					var v2 = player.velocity.y
 					var new_v1 = (v1 + v2 - e * (v1 - v2)) / 2.0
-					if new_v1 > -510.0:
-						new_v1 = -510.0
+					if new_v1 > BOUNCE_MIN_VELOCITY:
+						new_v1 = BOUNCE_MIN_VELOCITY
 					other_player.velocity.y = new_v1
-				# Destroy the parachute via RPC since we are the local player colliding with it unless inside wind draft
-				if not is_in_active_wind_draft():
-					player.sync_deactivate_parachute.rpc()
+					bounced = true
+				
+				if bounced:
+					if is_in_active_wind_draft():
+						bounce_count += 1
+						if bounce_count >= 3:
+							player.sync_deactivate_parachute.rpc()
+					else:
+						player.sync_deactivate_parachute.rpc()
 			elif is_instance_valid(player) and player.is_local():
 				# We are the owner of the parachute, and a remote player collided with it
 				var relative_y = other_player.global_position.y - player.global_position.y
+				var bounced = false
 				if relative_y < -60.0 and other_player.velocity.y >= -150.0:
-					var e = 1.4
+					var e = BOUNCE_RESTITUTION
 					var v1 = other_player.velocity.y
 					var v2 = player.velocity.y
 					var new_v1 = (v1 + v2 - e * (v1 - v2)) / 2.0
 					var new_v2 = (v1 + v2 + e * (v1 - v2)) / 2.0
-					if new_v1 > -510.0:
-						var diff = -510.0 - new_v1
+					if new_v1 > BOUNCE_MIN_VELOCITY:
+						var diff = BOUNCE_MIN_VELOCITY - new_v1
 						new_v2 -= diff
 					player.velocity.y = new_v2
-				# Destroy the parachute unless inside wind draft
-				if not is_in_active_wind_draft():
-					destroy_parachute()
+					bounced = true
+				
+				if bounced:
+					if is_in_active_wind_draft():
+						bounce_count += 1
+						if bounce_count >= 3:
+							destroy_parachute()
+					else:
+						destroy_parachute()
 			return
 	else:
 		# Shot/independent parachute collision
@@ -199,42 +219,58 @@ func _on_body_entered(body: Node2D) -> void:
 			if other_player.has_method("is_local") and other_player.is_local():
 				if reattach_cooldown > 0.0:
 					var relative_y = other_player.global_position.y - global_position.y
+					var bounced = false
 					if relative_y < -60.0 and other_player.velocity.y >= -150.0:
-						var e = 1.4
+						var e = BOUNCE_RESTITUTION
 						var v1 = other_player.velocity.y
 						var v2 = velocity.y
 						var new_v1 = (v1 + v2 - e * (v1 - v2)) / 2.0
 						var new_v2 = (v1 + v2 + e * (v1 - v2)) / 2.0
-						if new_v1 > -510.0:
-							var diff = -510.0 - new_v1
-							new_v1 = -510.0
+						if new_v1 > BOUNCE_MIN_VELOCITY:
+							var diff = BOUNCE_MIN_VELOCITY - new_v1
+							new_v1 = BOUNCE_MIN_VELOCITY
 							new_v2 -= diff
 						other_player.velocity.y = new_v1
 						velocity.y = new_v2
-					if not is_in_active_wind_draft():
-						queue_free()
+						bounced = true
+					
+					if bounced:
+						if is_in_active_wind_draft():
+							bounce_count += 1
+							if bounce_count >= 3:
+								queue_free()
+						else:
+							queue_free()
 			elif is_instance_valid(player) and player.is_local():
 				if reattach_cooldown > 0.0:
 					var relative_y = other_player.global_position.y - global_position.y
+					var bounced = false
 					if relative_y < -60.0 and other_player.velocity.y >= -150.0:
-						var e = 1.4
+						var e = BOUNCE_RESTITUTION
 						var v1 = other_player.velocity.y
 						var v2 = velocity.y
 						var new_v1 = (v1 + v2 - e * (v1 - v2)) / 2.0
 						var new_v2 = (v1 + v2 + e * (v1 - v2)) / 2.0
-						if new_v1 > -510.0:
-							var diff = -510.0 - new_v1
+						if new_v1 > BOUNCE_MIN_VELOCITY:
+							var diff = BOUNCE_MIN_VELOCITY - new_v1
 							new_v2 -= diff
 						velocity.y = new_v2
-					if not is_in_active_wind_draft():
-						queue_free()
+						bounced = true
+					
+					if bounced:
+						if is_in_active_wind_draft():
+							bounce_count += 1
+							if bounce_count >= 3:
+								queue_free()
+						else:
+							queue_free()
 			return
 			
 		if body is TileMapLayer:
 			queue_free()
 			return
 			
-		if body.has_method("die_by_bullet") or body.name.begins_with("Enemy") or body.name.begins_with("SpawnerEnemy"):
+		if body.has_method("is_letter") or body.has_method("die_by_bullet") or body.name.begins_with("Enemy") or body.name.begins_with("SpawnerEnemy"):
 			# Ricochet the enemy off the parachute instead of killing them
 			var bounce_dir = (body.global_position - global_position).normalized()
 			if bounce_dir.y > -0.2:

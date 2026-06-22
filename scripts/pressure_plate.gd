@@ -34,13 +34,21 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	wiggle_seed += delta
+	
+	# Filter out freed/invalid references (e.g. players dying or parachutes getting destroyed)
+	var original_count = pressed_objects.size()
+	pressed_objects = pressed_objects.filter(func(obj): return is_instance_valid(obj))
+	if pressed_objects.size() != original_count:
+		_update_pressed_state()
+		
 	queue_redraw()
 
 func _on_body_entered(body: Node2D) -> void:
-	if body.name.begins_with("Player") or body.name.begins_with("Enemy") or body.name.begins_with("SpawnerEnemy") or body.has_method("die_by_bullet"):
+	if body.name.begins_with("Player") or body.name.begins_with("Enemy") or body.name.begins_with("SpawnerEnemy") or body.has_method("die_by_bullet") or body.has_method("is_letter"):
 		if not pressed_objects.has(body):
 			pressed_objects.append(body)
 			_update_pressed_state()
+
 
 func _on_body_exited(body: Node2D) -> void:
 	if pressed_objects.has(body):

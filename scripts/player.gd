@@ -70,7 +70,12 @@ const PARACHUTE_HOLD_REQUIRED: float = 1.0
 var teleport_cooldown: float = 0.0
 var active_wind_drafts: Array = []
 var active_interactables: Array = []
+var fall_start_y: float = 0.0
+var is_first_physics_frame: bool = true
 var is_noclip: bool = false
+var is_carrying_letter: bool = false
+var is_dragging_letter: bool = false
+var carried_letter_mass: float = 1.0
 
 func _ready() -> void:
 	platform_floor_layers = 0
@@ -145,7 +150,7 @@ func setup_camera() -> void:
 
 
 func is_local() -> bool:
-	if not multiplayer.has_multiplayer_peer() or multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
+	if not multiplayer or not multiplayer.has_multiplayer_peer() or multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
 		return player_id == 1
 	var is_server = multiplayer.is_server()
 	return (player_id == 1 and is_server) or (player_id == 2 and not is_server)
@@ -187,11 +192,19 @@ func sync_weapon_drawing(new_lines: Array) -> void:
 func die() -> void:
 	if is_noclip:
 		return
-	# Endless game: respawn immediately at spawn point and clear gun
+	
 	if is_local():
-		if is_parachute_active:
-			sync_deactivate_parachute.rpc()
-		_respawn()
+		var level = get_node_or_null("/root/Level1")
+		if level and level.has_method("sync_global_death"):
+			if multiplayer and multiplayer.multiplayer_peer and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
+				level.sync_global_death.rpc()
+			else:
+				level.sync_global_death()
+		else:
+			if is_parachute_active:
+				sync_deactivate_parachute.rpc()
+			_respawn()
+
 
 func _respawn() -> void:
 	is_noclip = false
@@ -207,8 +220,11 @@ func _respawn() -> void:
 			position = Vector2(200, 400)
 		else:
 			position = Vector2(300, 400)
+	fall_start_y = position.y
 
 func _input(event: InputEvent) -> void:
+	if not is_inside_tree() or get_viewport() == null:
+		return
 	if not is_local():
 		return
 		
@@ -300,6 +316,8 @@ func sync_catch_parachute(parachute_path: NodePath) -> void:
 		# Reactivate it
 		parachute.is_active = true
 		parachute.active_duration = parachute.parachute_duration
+		if "bounce_count" in parachute:
+			parachute.bounce_count = 0
 		
 		# Enable canopy collision polygon
 		var canopy = parachute.get_node_or_null("CollisionPolygon2D")
@@ -338,6 +356,13 @@ func sync_shoot(bullet_pos: Vector2, bullet_dir: Vector2) -> void:
 	else:
 		main.add_child(bullet)
 
+@rpc("any_peer", "call_local", "reliable")
+func sync_push_letter(letter_path: NodePath, push_vel: Vector2) -> void:
+	var letter_node = get_node_or_null(letter_path)
+	if letter_node and letter_node.has_method("is_letter"):
+		if letter_node.get("mass") < 3.0 and letter_node.get("state") == 0: # State.IDLE
+			letter_node.velocity.x = push_vel.x
+
 @rpc("any_peer", "unreliable")
 func sync_state(pos: Vector2, vel: Vector2, facing: bool, gun_rot: float) -> void:
 	if not is_local():
@@ -354,6 +379,9 @@ func sync_state(pos: Vector2, vel: Vector2, facing: bool, gun_rot: float) -> voi
 				$DrawnGun.scale = Vector2(1.0, -1.0)
 
 func _physics_process(delta: float) -> void:
+	if not is_inside_tree() or get_viewport() == null:
+		return
+		
 	# Check pause state from Main
 	var main = get_parent()
 	if main and main.get("is_game_paused") == true:
@@ -419,7 +447,7 @@ func _physics_process(delta: float) -> void:
 			$DrawnGun.rotation = target_angle
 			gun_rot = target_angle
 			
-		if multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
+		if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
 			sync_state.rpc(position, velocity, facing_right, gun_rot)
 			
 		# Drive visual rig and redraw
@@ -428,6 +456,23 @@ func _physics_process(delta: float) -> void:
 		var face: float = 1.0 if facing_right else -1.0
 		_drive_visual(delta, velocity, true, face, holding, aim)
 		return
+
+	if is_first_physics_frame:
+		fall_start_y = global_position.y
+		is_first_physics_frame = false
+
+	if is_local():
+		if is_on_floor():
+			var fall_distance = global_position.y - fall_start_y
+			if fall_distance > 128.0 * 5.0: # 640.0 pixels
+				die()
+				return
+			fall_start_y = global_position.y
+		else:
+			if is_parachute_active:
+				fall_start_y = global_position.y
+			elif global_position.y < fall_start_y:
+				fall_start_y = global_position.y
 
 	# Update teleport cooldown for local player
 	if teleport_cooldown > 0.0:
@@ -481,12 +526,24 @@ func _physics_process(delta: float) -> void:
 				active_gravity = gravity * 0.55          # floaty apex
 			elif velocity.y > 0.0:
 				active_gravity = gravity * FALL_GRAVITY_MULT  # falling momentum
+			
+			if is_carrying_letter:
+				active_gravity = active_gravity * (1.0 + carried_letter_mass * 0.3)
+				
 			velocity.y += active_gravity * delta
-			velocity.y = minf(velocity.y, TERMINAL_FALL)     # terminal velocity
+			
+			var active_terminal_fall = TERMINAL_FALL
+			if is_carrying_letter:
+				active_terminal_fall *= (1.0 + carried_letter_mass * 0.2)
+			velocity.y = minf(velocity.y, active_terminal_fall)     # terminal velocity
 
 			# Parachute glide cap
-			if is_parachute_active and velocity.y > 90.0:
-				velocity.y = 90.0
+			if is_parachute_active:
+				var glide_cap = 90.0
+				if is_carrying_letter:
+					glide_cap = 90.0 + carried_letter_mass * 120.0
+				if velocity.y > glide_cap:
+					velocity.y = glide_cap
 
 	# Apply wind draft velocity if parachute is active
 	if has_wind:
@@ -497,7 +554,7 @@ func _physics_process(delta: float) -> void:
 			velocity.y = move_toward(velocity.y, wind_push.y, wind_accel * delta)
 
 	# Trigger jump if within coyote and jump buffer windows
-	if jump_buffer_timer > 0.0 and coyote_timer > 0.0:
+	if jump_buffer_timer > 0.0 and coyote_timer > 0.0 and not is_dragging_letter:
 		velocity.y = JUMP_VELOCITY
 		jump_buffer_timer = 0.0
 		coyote_timer = 0.0
@@ -526,12 +583,32 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, direction * top_speed, active_accel * delta)
 		if not (has_node("DrawnGun") and $DrawnGun.lines.size() > 0):
 			facing_right = direction > 0
-		walk_time += delta * 12.0
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, active_frict * delta)
 		walk_time = move_toward(walk_time, 0.0, delta * 10.0)
 
+	if is_dragging_letter:
+		velocity.x *= (1.0 - 0.45 * carried_letter_mass * delta)
+
 	move_and_slide()
+
+	# Push letters with mass < 3.0 when colliding
+	for i in get_slide_collision_count():
+		var c = get_slide_collision(i)
+		var collider = c.get_collider()
+		if collider and collider.has_method("is_letter"):
+			if collider.get("mass") < 3.0 and collider.get("state") == 0: # State.IDLE is 0
+				var push_dir = -c.get_normal()
+				if abs(push_dir.x) > 0.3:
+					var push_force = 120.0
+					if abs(velocity.x) > 100.0:
+						push_force = abs(velocity.x) * 1.1
+					var target_vx = sign(push_dir.x) * push_force
+					if abs(collider.velocity.x - target_vx) > 20.0:
+						if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
+							sync_push_letter.rpc(collider.get_path(), Vector2(target_vx, 0.0))
+						else:
+							collider.velocity.x = target_vx
 
 	# Check for spike collisions (using the editor-defined custom collision shapes of the spike tile)
 	var parent_node = get_parent()
@@ -587,7 +664,7 @@ func _physics_process(delta: float) -> void:
 		gun_rot = target_angle
 	
 	# Send updated local player state to the remote peer
-	if multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
+	if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
 		sync_state.rpc(position, velocity, facing_right, gun_rot)
 
 	# Drive the procedural rig and redraw

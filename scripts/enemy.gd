@@ -11,6 +11,7 @@ var wiggle_seed: float = 0.0
 var active_wind_drafts: Array = []
 var rotation_speed: float = 0.0
 var visual_rotation: float = 0.0
+var time_since_spawn: float = 0.0
 
 func _ready() -> void:
 	platform_floor_layers = 0
@@ -55,11 +56,12 @@ func sync_enemy_state(pos: Vector2, dir: float, rot: float) -> void:
 		visual_rotation = rot
 
 func is_multiplayer_authority_local() -> bool:
-	if not multiplayer.has_multiplayer_peer() or multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
+	if not multiplayer or not multiplayer.has_multiplayer_peer() or multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
 		return true
 	return multiplayer.is_server()
 
 func _physics_process(delta: float) -> void:
+	time_since_spawn += delta
 	# Check pause state
 	var main = get_tree().current_scene
 	if main and main.get("is_game_paused") == true:
@@ -163,8 +165,10 @@ func _physics_process(delta: float) -> void:
 		visual_rotation = rotate_toward(visual_rotation, 0.0, 5.0 * delta)
 	
 	# Send position and rotation update to clients
-	if multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
-		sync_enemy_state.rpc(position, direction, visual_rotation)
+	if is_multiplayer_authority_local():
+		if time_since_spawn > 0.5:
+			if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
+				sync_enemy_state.rpc(position, direction, visual_rotation)
 	
 	wiggle_seed += delta
 	queue_redraw()

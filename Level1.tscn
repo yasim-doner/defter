@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://b05b5i7tkgida" path="res://scripts/Level1.gd" id="1_level"]
 [ext_resource type="Script" uid="uid://cfoden2v1tdu7" path="res://scripts/player.gd" id="2_player"]
 [ext_resource type="Script" uid="uid://s2r02jjojtvt" path="res://scripts/drawn_gun.gd" id="3_gun"]
-[ext_resource type="Script" uid="uid://dacq5cttqhapo" path="res://scripts/pen.gd" id="5_pen"]
+[ext_resource type="PackedScene" path="res://scenes/pen.tscn" id="5_pen"]
 [ext_resource type="Texture2D" uid="uid://deiow8v3e8n3a" path="res://assets/Resim (11).jpg" id="7_page1"]
 [ext_resource type="PackedScene" uid="uid://cx6i8d7f2ghk" path="res://scenes/parachute_area.tscn" id="8_parachute"]
 [ext_resource type="PackedScene" path="res://scenes/chute.tscn" id="9_5g1s2"]
@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" path="res://scenes/wind_switch.tscn" id="13_switch"]
 [ext_resource type="PackedScene" uid="uid://c4n1t8vyu7r05" path="res://scenes/pressure_plate.tscn" id="14_plate"]
 [ext_resource type="Script" uid="uid://dr58yoytl621s" path="res://scripts/death_zone.gd" id="15_3gjqj"]
+[ext_resource type="PackedScene" path="res://scenes/letter.tscn" id="15_letter"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
 radius = 8.0
@@ -113,13 +114,11 @@ texture = ExtResource("7_page1")
 
 [node name="Pens" type="Node2D" parent="." unique_id=409736343]
 
-[node name="Pen3" type="Area2D" parent="Pens" unique_id=1526827075]
+[node name="Pen3" parent="Pens" unique_id=1526827075 instance=ExtResource("5_pen")]
 position = Vector2(575.40405, 3373.7285)
-script = ExtResource("5_pen")
 
-[node name="Pen2" type="Area2D" parent="Pens" unique_id=581298130]
+[node name="Pen2" parent="Pens" unique_id=581298130 instance=ExtResource("5_pen")]
 position = Vector2(2071, 912)
-script = ExtResource("5_pen")
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1938417952]
 
@@ -170,7 +169,6 @@ speed = 0.0
 [node name="WindDraft" parent="." unique_id=1727304534 instance=ExtResource("12_aiv1b")]
 position = Vector2(1726, 2022)
 speed = 500.0
-is_on = false
 height = 3150.0
 
 [node name="WindSwitch" parent="." unique_id=20261915 instance=ExtResource("13_switch")]
@@ -179,11 +177,26 @@ wind_draft_path = NodePath("../WindDraft")
 
 [node name="ParachuteArea" parent="." unique_id=1983574243 instance=ExtResource("8_parachute")]
 position = Vector2(1366, 3104)
-parachute_duration = 6.0
+parachute_duration = 100.0
 
 [node name="ParachuteArea2" parent="." unique_id=1721257749 instance=ExtResource("8_parachute")]
 position = Vector2(1356, 3405)
 parachute_duration = 3.0
+
+[node name="PressurePlate1" parent="." unique_id=987654321 instance=ExtResource("14_plate")]
+position = Vector2(1315, 604)
+
+[node name="PressurePlate2" parent="." unique_id=987654322 instance=ExtResource("14_plate")]
+position = Vector2(1448, 605)
+
+[node name="Letter1" parent="." unique_id=1289371081 instance=ExtResource("15_letter")]
+position = Vector2(320, 3050)
+mass = 1.5
+bounciness = 0.2
+
+[node name="Letter2" parent="." unique_id=1289371082 instance=ExtResource("15_letter")]
+position = Vector2(350, 3050)
+mass = 4.0
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1795732186]
 
@@ -347,12 +360,6 @@ theme_override_font_sizes/font_size = 20
 text = "Press [E] to Glide"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="PressurePlate1" parent="." unique_id=987654321 instance=ExtResource("14_plate")]
-position = Vector2(1315, 604)
-
-[node name="PressurePlate2" parent="." unique_id=987654322 instance=ExtResource("14_plate")]
-position = Vector2(1448, 605)
 
 [node name="Area2D" type="Area2D" parent="." unique_id=1444110185]
 script = ExtResource("15_3gjqj")

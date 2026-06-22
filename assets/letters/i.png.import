@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bk4u3astd3h5m"
-path="res://.godot/imported/chute_door.png-2f4439368e53ac23db7303d6f443f6a2.ctex"
+uid="uid://dppoxhqr6s5a8"
+path="res://.godot/imported/i.png-2a90c4a664b79451dbc590955f36f5e1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/chute_door.png"
-dest_files=["res://.godot/imported/chute_door.png-2f4439368e53ac23db7303d6f443f6a2.ctex"]
+source_file="res://assets/letters/i.png"
+dest_files=["res://.godot/imported/i.png-2a90c4a664b79451dbc590955f36f5e1.ctex"]
 
 [params]
 

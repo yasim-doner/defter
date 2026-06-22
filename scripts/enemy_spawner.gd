@@ -14,7 +14,7 @@ func _ready() -> void:
 	spawn_timer = randf_range(0.0, spawn_rate)
 
 func is_leader() -> bool:
-	if not multiplayer.has_multiplayer_peer() or multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
+	if not multiplayer or not multiplayer.has_multiplayer_peer() or multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
 		return true
 	return multiplayer.is_server()
 

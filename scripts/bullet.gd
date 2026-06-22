@@ -55,7 +55,7 @@ func _on_body_entered(body: Node) -> void:
 	elif body.has_method("die_by_bullet"):
 		# Only the authority (server/host) should register the hit and trigger the death RPC chain
 		var is_auth = true
-		if multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
+		if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
 			is_auth = multiplayer.is_server()
 		
 		if is_auth:

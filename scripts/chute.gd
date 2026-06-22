@@ -34,6 +34,20 @@ func _on_body_entered(body: Node2D) -> void:
 				# Set teleport cooldown on player to prevent instant back-teleportation
 				if "teleport_cooldown" in body:
 					body.teleport_cooldown = 0.3
+	elif body.has_method("is_letter"):
+		if not body.get("is_carried"):
+			var is_auth = not multiplayer or not multiplayer.has_multiplayer_peer() or multiplayer.is_server()
+			if is_auth:
+				if "teleport_cooldown" in body and body.teleport_cooldown > 0.0:
+					return
+				var destination_chute = _find_matching_chute()
+				if destination_chute:
+					body.global_position = destination_chute.global_position
+					var exit_dir = Vector2.RIGHT.rotated(destination_chute.global_rotation)
+					body.velocity = exit_dir * destination_chute.launch_speed
+					if "teleport_cooldown" in body:
+						body.teleport_cooldown = 0.3
+
 
 func _find_matching_chute() -> Area2D:
 	if chute_id == "":

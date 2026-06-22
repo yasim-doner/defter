@@ -14,6 +14,7 @@
 [ext_resource type="PackedScene" uid="uid://ngrwcp3h2mqr" path="res://scenes/wind_draft.tscn" id="12_aiv1b"]
 [ext_resource type="PackedScene" path="res://scenes/wind_switch.tscn" id="13_switch"]
 [ext_resource type="PackedScene" uid="uid://c4n1t8vyu7r05" path="res://scenes/pressure_plate.tscn" id="14_plate"]
+[ext_resource type="Script" uid="uid://dr58yoytl621s" path="res://scripts/death_zone.gd" id="15_3gjqj"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
 radius = 8.0
@@ -98,6 +99,8 @@ corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_riqys"]
 
 [node name="Level1" type="Node2D" unique_id=1753699881]
 script = ExtResource("1_level")
@@ -350,3 +353,10 @@ position = Vector2(1315, 604)
 
 [node name="PressurePlate2" parent="." unique_id=987654322 instance=ExtResource("14_plate")]
 position = Vector2(1448, 605)
+
+[node name="Area2D" type="Area2D" parent="." unique_id=1444110185]
+script = ExtResource("15_3gjqj")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=831139359]
+position = Vector2(1262, 3759.5)
+shape = SubResource("WorldBoundaryShape2D_riqys")

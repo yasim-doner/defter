@@ -8,8 +8,10 @@ func _ready() -> void:
 
 func _on_body_entered(body: Node2D) -> void:
 	if body.has_method("die_by_bullet"):
-		# An enemy fell in — delete it.
-		body.queue_free()
+		# An enemy fell in — delete it (only server decides to prevent desync)
+		var is_auth = not multiplayer or not multiplayer.has_multiplayer_peer() or multiplayer.is_server()
+		if is_auth:
+			body.die_by_bullet()
 	elif body.has_method("die"):
 		# A player fell in — respawn (die() guards is_local internally).
 		body.die()

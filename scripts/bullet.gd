@@ -50,7 +50,7 @@ func _draw() -> void:
 	draw_line(Vector2(-4, -1.5 + w2), Vector2(4, -1.5 + w1), color, 1.8)
 
 func _on_body_entered(body: Node) -> void:
-	if body.name.begins_with("Platform"):
+	if body is TileMapLayer or body.name.begins_with("Platform"):
 		queue_free()
 	elif body.has_method("die_by_bullet"):
 		# Only the authority (server/host) should register the hit and trigger the death RPC chain

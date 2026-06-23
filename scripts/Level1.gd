@@ -49,9 +49,10 @@ func _ready() -> void:
 	indicator.name = "OffscreenIndicator"
 	$UI.add_child(indicator)
 			
-	# Monitor network disconnect to clean up
+	# Monitor network disconnect to clean up safely
 	if multiplayer:
-		multiplayer.peer_disconnected.connect(_on_peer_disconnected)
+		if not multiplayer.peer_disconnected.is_connected(_on_peer_disconnected):
+			multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	
 	# Connect to all pre-placed pressure plates in the scene
 	var all_plates = get_tree().get_nodes_in_group("pressure_plates")

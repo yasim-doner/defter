@@ -35,7 +35,7 @@ func _on_body_entered(body: Node2D) -> void:
 				if "teleport_cooldown" in body:
 					body.teleport_cooldown = 0.3
 	elif body.has_method("is_letter"):
-		if not body.get("is_carried"):
+		if body.get("state") == 0: # State.IDLE
 			var is_auth = not multiplayer or not multiplayer.has_multiplayer_peer() or multiplayer.is_server()
 			if is_auth:
 				if "teleport_cooldown" in body and body.teleport_cooldown > 0.0:

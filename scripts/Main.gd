@@ -13,11 +13,15 @@ func _ready() -> void:
 	host_button.pressed.connect(_on_host_pressed)
 	join_button.pressed.connect(_on_join_pressed)
 	
-	# Connect ENet signals
-	multiplayer.peer_connected.connect(_on_peer_connected)
-	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
-	multiplayer.connected_to_server.connect(_on_connected_ok)
-	multiplayer.connection_failed.connect(_on_connected_fail)
+	# Connect ENet signals safely
+	if not multiplayer.peer_connected.is_connected(_on_peer_connected):
+		multiplayer.peer_connected.connect(_on_peer_connected)
+	if not multiplayer.peer_disconnected.is_connected(_on_peer_disconnected):
+		multiplayer.peer_disconnected.connect(_on_peer_disconnected)
+	if not multiplayer.connected_to_server.is_connected(_on_connected_ok):
+		multiplayer.connected_to_server.connect(_on_connected_ok)
+	if not multiplayer.connection_failed.is_connected(_on_connected_fail):
+		multiplayer.connection_failed.connect(_on_connected_fail)
 
 func _on_host_pressed() -> void:
 	var err = peer.create_server(52000, 1) # Port 52000, 1 client max (2 players total)

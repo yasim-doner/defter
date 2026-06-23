@@ -87,29 +87,40 @@ func _physics_process(delta: float) -> void:
 			var player = _get_player_by_id(carried_by_id)
 			if is_instance_valid(player):
 				if state == State.DRAGGING:
+					var distance = global_position.distance_to(player.global_position)
+					if distance > 100.0:
+						_stop_carrying(player, Vector2.ZERO)
+						return
+						
 					var shape_height = 12.0 * scale.y
 					var target_pos = player.global_position + Vector2(drag_offset_x, -shape_height)
 					
-					# Physics-based dragging with forces to avoid snapping
-					var diff = target_pos - global_position
-					if diff.length() > 200.0:
-						global_position = target_pos
-						velocity = Vector2.ZERO
-					else:
-						var k = 800.0 / mass # Spring constant (stiffness)
-						var damp = 15.0      # Damping relative to player's movement
-						
-						var acc = Vector2.ZERO
-						# Spring force and relative damping to match player's velocity
-						acc.x = k * diff.x - damp * (velocity.x - player.velocity.x)
-						acc.y = k * diff.y - damp * (velocity.y - player.velocity.y)
-						
-						# Input-based force to help push/pull based on player's movement direction
-						var input_dir = Input.get_axis("move_left", "move_right")
-						if input_dir != 0:
-							acc.x += input_dir * (650.0 / mass)
+					if carried_by_id == local_id:
+						# Physics-based dragging with forces to avoid snapping
+						var diff = target_pos - global_position
+						if diff.length() > 200.0:
+							global_position = target_pos
+							velocity = Vector2.ZERO
+						else:
+							var k = 800.0 / mass # Spring constant (stiffness)
+							var damp = 15.0      # Damping relative to player's movement
 							
-						velocity += acc * delta
+							var acc = Vector2.ZERO
+							# Spring force and relative damping to match player's velocity
+							acc.x = k * diff.x - damp * (velocity.x - player.velocity.x)
+							acc.y = k * diff.y - damp * (velocity.y - player.velocity.y)
+							
+							# Input-based force to help push/pull based on player's movement direction
+							var input_dir = Input.get_axis("move_left", "move_right")
+							if input_dir != 0:
+								acc.x += input_dir * (650.0 / mass)
+								
+							velocity += acc * delta
+					else:
+						# For remote players, keep position near the target to prevent drifting
+						var diff = target_pos - global_position
+						if diff.length() > 50.0:
+							global_position = target_pos
 					
 					move_and_slide()
 					rotation = 0.0
@@ -132,11 +143,22 @@ func _physics_process(delta: float) -> void:
 			
 			# Move and collide to bounce
 			var collision = move_and_collide(velocity * delta)
+			var on_floor = false
 			if collision:
-				# Bounce off the surface normal
-				velocity = velocity.bounce(collision.get_normal()) * bounciness
+				var normal = collision.get_normal()
+				velocity = velocity.bounce(normal) * bounciness
+				if normal.y < -0.7:
+					on_floor = true
+					if abs(velocity.y) < 80.0:
+						velocity.y = 0.0
+				
 				# Rotate slightly on bounce
-				rotation += velocity.x * 0.005
+				if not on_floor or abs(velocity.x) > 10.0:
+					rotation += velocity.x * 0.005
+			
+			if on_floor:
+				velocity.x = move_toward(velocity.x, 0.0, 500.0 * delta)
+				rotation = rotate_toward(rotation, 0.0, 6.0 * delta)
 				
 			# Send updated physics state to clients unreliably
 			if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
@@ -144,9 +166,21 @@ func _physics_process(delta: float) -> void:
 		else:
 			# Client: just move passively based on velocity or wait for position updates
 			var collision = move_and_collide(velocity * delta)
+			var on_floor = false
 			if collision:
-				velocity = velocity.bounce(collision.get_normal()) * bounciness
-				rotation += velocity.x * 0.005
+				var normal = collision.get_normal()
+				velocity = velocity.bounce(normal) * bounciness
+				if normal.y < -0.7:
+					on_floor = true
+					if abs(velocity.y) < 80.0:
+						velocity.y = 0.0
+				
+				if not on_floor or abs(velocity.x) > 10.0:
+					rotation += velocity.x * 0.005
+					
+			if on_floor:
+				velocity.x = move_toward(velocity.x, 0.0, 500.0 * delta)
+				rotation = rotate_toward(rotation, 0.0, 6.0 * delta)
 
 func _input(event: InputEvent) -> void:
 	# Only local player handles input events
@@ -199,10 +233,15 @@ func _apply_carry_to_player(player_node: CharacterBody2D, enable: bool) -> void:
 			player_node.is_carrying_letter = true
 			player_node.is_dragging_letter = (state == State.DRAGGING)
 			player_node.carried_letter_mass = mass
+			if state == State.DRAGGING:
+				player_node.set("dragged_letter_node", self)
+			else:
+				player_node.set("dragged_letter_node", null)
 		else:
 			player_node.is_carrying_letter = false
 			player_node.is_dragging_letter = false
 			player_node.carried_letter_mass = 1.0
+			player_node.set("dragged_letter_node", null)
 
 func _start_dragging(player_node: CharacterBody2D, player_id: int) -> void:
 	# Determine offset based on grab side

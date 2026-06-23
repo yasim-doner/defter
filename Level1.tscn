@@ -14,7 +14,7 @@
 [ext_resource type="PackedScene" uid="uid://ngrwcp3h2mqr" path="res://scenes/wind_draft.tscn" id="12_aiv1b"]
 [ext_resource type="PackedScene" path="res://scenes/wind_switch.tscn" id="13_switch"]
 [ext_resource type="PackedScene" uid="uid://c4n1t8vyu7r05" path="res://scenes/pressure_plate.tscn" id="14_plate"]
-[ext_resource type="PackedScene" path="res://scenes/letter.tscn" id="15_letter"]
+[ext_resource type="PackedScene" uid="uid://b7s5gvyrxco03" path="res://scenes/letter.tscn" id="15_letter"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
 radius = 8.0
@@ -189,7 +189,7 @@ position = Vector2(1448, 605)
 [node name="Letter1" parent="." unique_id=1289371081 instance=ExtResource("15_letter")]
 position = Vector2(320, 3050)
 mass = 1.5
-bounciness = 0.2
+bounciness = 0.75
 
 [node name="Letter2" parent="." unique_id=1289371082 instance=ExtResource("15_letter")]
 position = Vector2(350, 3050)

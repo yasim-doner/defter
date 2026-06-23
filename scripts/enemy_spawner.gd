@@ -34,7 +34,9 @@ func _physics_process(delta: float) -> void:
 				break
 				
 		if not enemy_in_area:
-			_spawn_enemy()
+			var group_name = "spawner_enemies_" + str(get_instance_id())
+			if get_tree().get_nodes_in_group(group_name).size() < max_enemies:
+				_spawn_enemy()
 
 func _spawn_enemy() -> void:
 	var spawn_pos = global_position

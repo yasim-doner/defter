@@ -76,6 +76,7 @@ var is_noclip: bool = false
 var is_carrying_letter: bool = false
 var is_dragging_letter: bool = false
 var carried_letter_mass: float = 1.0
+var dragged_letter_node: CharacterBody2D = null
 
 func _ready() -> void:
 	platform_floor_layers = 0
@@ -193,10 +194,11 @@ func die() -> void:
 	if is_noclip:
 		return
 	
-	if is_local():
+	var is_server = not multiplayer or not multiplayer.has_multiplayer_peer() or multiplayer.is_server()
+	if is_local() or is_server:
 		var level = get_node_or_null("/root/Level1")
 		if level and level.has_method("sync_global_death"):
-			if multiplayer and multiplayer.multiplayer_peer and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
+			if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
 				level.sync_global_death.rpc()
 			else:
 				level.sync_global_death()
@@ -590,7 +592,15 @@ func _physics_process(delta: float) -> void:
 	if is_dragging_letter:
 		velocity.x *= (1.0 - 0.45 * carried_letter_mass * delta)
 
+	var has_drag_exception = false
+	if is_dragging_letter and is_instance_valid(dragged_letter_node):
+		add_collision_exception_with(dragged_letter_node)
+		has_drag_exception = true
+
 	move_and_slide()
+
+	if has_drag_exception and is_instance_valid(dragged_letter_node):
+		remove_collision_exception_with(dragged_letter_node)
 
 	# Push letters with mass < 3.0 when colliding
 	for i in get_slide_collision_count():

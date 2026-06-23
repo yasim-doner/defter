@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://ctv3mli2vuxuw" path="res://scripts/letter.gd" id="1_script"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3gjqj"]
+size = Vector2(16, 16)
 
 [node name="Letter" type="CharacterBody2D" unique_id=668434214]
 collision_layer = 3

@@ -14,9 +14,8 @@
 [ext_resource type="PackedScene" uid="uid://ngrwcp3h2mqr" path="res://scenes/wind_draft.tscn" id="12_aiv1b"]
 [ext_resource type="PackedScene" path="res://scenes/wind_switch.tscn" id="13_switch"]
 [ext_resource type="PackedScene" uid="uid://c4n1t8vyu7r05" path="res://scenes/pressure_plate.tscn" id="14_plate"]
-[ext_resource type="PackedScene" uid="uid://b7s5gvyrxco03" path="res://scenes/letter.tscn" id="15_letter"]
 [ext_resource type="Script" uid="uid://dr58yoytl621s" path="res://scripts/death_zone.gd" id="15_3gjqj"]
-[ext_resource type="PackedScene" path="res://scenes/letter.tscn" id="15_letter"]
+[ext_resource type="PackedScene" uid="uid://b7s5gvyrxco03" path="res://scenes/letter.tscn" id="15_letter"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
 radius = 8.0
@@ -164,6 +163,7 @@ chute_id = "1"
 [node name="EnemySpawner" parent="." unique_id=395964841 instance=ExtResource("9_aiv1b")]
 position = Vector2(1728.0001, 119)
 spawn_rate = 1.0
+max_enemies = 10
 patrol_range = 0.0
 speed = 0.0
 

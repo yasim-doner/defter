@@ -174,4 +174,4 @@ func sync_level_finished() -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func sync_global_death() -> void:
-	get_tree().change_scene_to_file("res://Level1.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://Level1.tscn")

@@ -214,6 +214,19 @@ func die_by_bullet() -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func sync_die() -> void:
+	# Disable processing, visibility, and collisions immediately to prevent further RPCs/interactions
+	set_physics_process(false)
+	set_process(false)
+	visible = false
+	if has_node("CollisionShape2D"):
+		$CollisionShape2D.set_deferred("disabled", true)
+	if has_node("Hitbox"):
+		$Hitbox.set_deferred("monitoring", false)
+		$Hitbox.set_deferred("monitorable", false)
+		
+	# Wait a short delay to allow any in-flight unreliable packets to clear, then free the node
+	if is_inside_tree():
+		await get_tree().create_timer(1.0).timeout
 	queue_free()
 
 

@@ -7,9 +7,9 @@ extends Node2D
 
 var drawing_player_name: String = ""
 
-# Level 1 starting spawn positions (down on page 1 floor)
-var spawn_p1: Vector2 = Vector2(250, 3100)
-var spawn_p2: Vector2 = Vector2(400, 3100)
+# Level 2 starting spawn positions (on top of the single platform)
+var spawn_p1: Vector2 = Vector2(250, 400)
+var spawn_p2: Vector2 = Vector2(450, 400)
 
 func _ready() -> void:
 	# Enable processing
@@ -54,7 +54,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	# Fall limit check for player respawning
-	var fall_limit = 3550.0
+	var fall_limit = 1000.0
 	var is_host = not multiplayer or not multiplayer.multiplayer_peer or multiplayer.is_server()
 	if is_host:
 		if player1.position.y > fall_limit:
@@ -93,29 +93,6 @@ func _on_peer_disconnected(_id: int) -> void:
 	if multiplayer:
 		multiplayer.multiplayer_peer = null
 	get_tree().change_scene_to_file("res://Main.tscn")
-
-func _on_enemy_died(enemy_name: String, pos: Vector2, patrol_range: float) -> void:
-	if multiplayer and multiplayer.multiplayer_peer and not multiplayer.is_server():
-		return
-	# Wait 5 seconds, then respawn the enemy using RPC
-	await get_tree().create_timer(5.0).timeout
-	if GameManager.is_network_active:
-		sync_spawn_enemy.rpc(enemy_name, pos, patrol_range)
-
-@rpc("any_peer", "call_local", "reliable")
-func sync_spawn_enemy(enemy_name: String, pos: Vector2, patrol_range: float) -> void:
-	var enemy_script = preload("res://scripts/enemy.gd")
-	if not has_node("Enemies"):
-		var container = Node2D.new()
-		container.name = "Enemies"
-		add_child(container)
-		
-	var enemy = CharacterBody2D.new()
-	enemy.set_script(enemy_script)
-	enemy.name = enemy_name
-	enemy.position = pos
-	enemy.patrol_range = patrol_range
-	$Enemies.add_child(enemy)
 
 @rpc("any_peer", "call_local", "reliable")
 func sync_level_finished() -> void:

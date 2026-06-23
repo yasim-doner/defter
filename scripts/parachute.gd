@@ -9,7 +9,7 @@ var is_active: bool = false
 # Movement variables when not attached
 var velocity: Vector2 = Vector2.ZERO
 var parachute_gravity: float = 800.0
-var lifetime: float = 1.5
+var lifetime: float = 3.0
 var reattach_cooldown: float = 0.0
 var bounce_count: int = 0
 
@@ -32,6 +32,7 @@ func _ready() -> void:
 func activate() -> void:
 	is_active = true
 	active_duration = parachute_duration
+	lifetime = parachute_duration
 	velocity = Vector2.ZERO
 	bounce_count = 0
 	
@@ -55,10 +56,6 @@ func _physics_process(delta: float) -> void:
 		var player_center = player.global_position + Vector2(0, -21)
 		global_position = player_center - marker.position
 		
-		# Check if the player pressed E again to shoot
-		if player.is_local() and Input.is_action_just_pressed("interact"):
-			shoot_parachute()
-			return
 	else:
 		# Not attached: check if inside any active wind drafts
 		var has_wind = false

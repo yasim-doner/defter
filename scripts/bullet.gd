@@ -24,8 +24,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	# Check pause state
-	var main = get_tree().current_scene
-	if main and main.get("is_game_paused") == true:
+	if GameManager.is_game_paused:
 		return
 		
 	# Move bullet
@@ -60,5 +59,19 @@ func _on_body_entered(body: Node) -> void:
 		
 		if is_auth:
 			body.die_by_bullet()
+		queue_free()
+	elif body.has_method("is_letter"):
+		var is_auth = true
+		if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
+			is_auth = multiplayer.is_server()
+			
+		if is_auth:
+			# Only push if the letter is IDLE (not carried or dragged)
+			if body.get("state") == 0: # State.IDLE
+				var l_mass = body.get("mass")
+				var l_bounciness = body.get("bounciness")
+				var bullet_mass_factor = 0.3
+				var push_impulse = direction * speed * bullet_mass_factor * (1.0 + l_bounciness) / l_mass
+				body.velocity += push_impulse
 		queue_free()
 

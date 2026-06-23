@@ -75,8 +75,7 @@ func _physics_process(delta: float) -> void:
 		teleport_cooldown -= delta
 
 	# Check pause state
-	var main = get_tree().current_scene
-	if main and main.get("is_game_paused") == true:
+	if GameManager.is_game_paused:
 		return
 
 	var local_id = _get_local_player_id()
@@ -182,50 +181,27 @@ func _physics_process(delta: float) -> void:
 				velocity.x = move_toward(velocity.x, 0.0, 500.0 * delta)
 				rotation = rotate_toward(rotation, 0.0, 6.0 * delta)
 
-func _input(event: InputEvent) -> void:
-	# Only local player handles input events
-	var local_player = _get_local_player()
-	if not local_player:
-		return
-		
+func start_dragging_by_player(player_node: CharacterBody2D) -> void:
 	var local_id = _get_local_player_id()
-	
-	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_E:
-			if state == State.IDLE:
-				# Drag check: player must be within 40px
-				if global_position.distance_to(local_player.global_position) <= 40.0:
-					_start_dragging(local_player, local_id)
-					get_viewport().set_input_as_handled()
-			elif state == State.DRAGGING and carried_by_id == local_id:
-				# Drop from dragging
-				_stop_carrying(local_player, Vector2.ZERO)
-				get_viewport().set_input_as_handled()
-			elif state == State.CARRYING and carried_by_id == local_id:
-				# Drop from carrying
-				_stop_carrying(local_player, Vector2.ZERO)
-				get_viewport().set_input_as_handled()
-				
-		elif event.keycode == KEY_Q:
-			if state == State.IDLE:
-				# Carry check directly from idle: player must be within 40px
-				if global_position.distance_to(local_player.global_position) <= 40.0:
-					if mass <= 3.0:
-						_start_carrying(local_player, local_id)
-						get_viewport().set_input_as_handled()
-			elif state == State.DRAGGING and carried_by_id == local_id:
-				# Carry check: allowed if mass is <= 3.0
-				if mass <= 3.0:
-					_start_carrying(local_player, local_id)
-					get_viewport().set_input_as_handled()
-			elif state == State.CARRYING and carried_by_id == local_id:
-				# Throw!
-				var facing_dir = 1.0 if local_player.facing_right else -1.0
-				var base_impulse = Vector2(350.0 * facing_dir, -250.0)
-				var total_impulse = base_impulse + local_player.velocity
-				var throw_vel = total_impulse / mass
-				_stop_carrying(local_player, throw_vel)
-				get_viewport().set_input_as_handled()
+	_start_dragging(player_node, local_id)
+
+func start_carrying_by_player(player_node: CharacterBody2D) -> void:
+	var local_id = _get_local_player_id()
+	_start_carrying(player_node, local_id)
+
+func drop_letter() -> void:
+	var local_player = _get_local_player()
+	if is_instance_valid(local_player):
+		_stop_carrying(local_player, Vector2.ZERO)
+
+func throw_letter() -> void:
+	var local_player = _get_local_player()
+	if is_instance_valid(local_player):
+		var facing_dir = 1.0 if local_player.facing_right else -1.0
+		var base_impulse = Vector2(350.0 * facing_dir, -250.0)
+		var total_impulse = base_impulse + local_player.velocity
+		var throw_vel = total_impulse / mass
+		_stop_carrying(local_player, throw_vel)
 
 func _apply_carry_to_player(player_node: CharacterBody2D, enable: bool) -> void:
 	if is_instance_valid(player_node):
@@ -233,6 +209,7 @@ func _apply_carry_to_player(player_node: CharacterBody2D, enable: bool) -> void:
 			player_node.is_carrying_letter = true
 			player_node.is_dragging_letter = (state == State.DRAGGING)
 			player_node.carried_letter_mass = mass
+			player_node.set("active_letter_node", self)
 			if state == State.DRAGGING:
 				player_node.set("dragged_letter_node", self)
 			else:
@@ -242,6 +219,7 @@ func _apply_carry_to_player(player_node: CharacterBody2D, enable: bool) -> void:
 			player_node.is_dragging_letter = false
 			player_node.carried_letter_mass = 1.0
 			player_node.set("dragged_letter_node", null)
+			player_node.set("active_letter_node", null)
 
 func _start_dragging(player_node: CharacterBody2D, player_id: int) -> void:
 	# Determine offset based on grab side

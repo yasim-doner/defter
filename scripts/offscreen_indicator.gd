@@ -9,7 +9,8 @@ var wiggle_seed: float = 0.0
 
 func _ready() -> void:
 	# Find players in the active scene
-	var level = get_tree().current_scene
+	var tree = get_tree()
+	var level = tree.current_scene if tree else null
 	if level:
 		var p1 = level.get_node_or_null("Player1")
 		var p2 = level.get_node_or_null("Player2")

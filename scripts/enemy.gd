@@ -14,6 +14,7 @@ var visual_rotation: float = 0.0
 var time_since_spawn: float = 0.0
 
 func _ready() -> void:
+	add_to_group("enemies")
 	platform_floor_layers = 0
 	spawn_pos = position
 	spawn_x = position.x
@@ -63,8 +64,7 @@ func is_multiplayer_authority_local() -> bool:
 func _physics_process(delta: float) -> void:
 	time_since_spawn += delta
 	# Check pause state
-	var main = get_tree().current_scene
-	if main and main.get("is_game_paused") == true:
+	if GameManager.is_game_paused:
 		velocity = Vector2.ZERO
 		return
 
@@ -120,7 +120,8 @@ func _physics_process(delta: float) -> void:
 					direction = sign(velocity.x)
 		
 	# Check for spike collisions (using the editor-defined custom collision shapes of the spike tile)
-	var level = get_tree().current_scene
+	var tree = get_tree()
+	var level = tree.current_scene if tree else null
 	if level:
 		for child in level.get_children():
 			if child is TileMapLayer:
@@ -207,7 +208,8 @@ func _draw() -> void:
 func die_by_bullet() -> void:
 	# Inform Main of the death so it can schedule a respawn (only for standard level enemies)
 	if not name.begins_with("SpawnerEnemy"):
-		var main = get_tree().current_scene
+		var tree = get_tree()
+		var main = tree.current_scene if tree else null
 		if main and main.has_method("_on_enemy_died"):
 			main._on_enemy_died(name, spawn_pos, patrol_range)
 	sync_die.rpc()

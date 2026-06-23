@@ -73,7 +73,8 @@ func sync_spawn_enemy(enemy_name: String, spawn_pos: Vector2, p_range: float, p_
 	enemy.add_to_group(group_name)
 	
 	# Add to current scene's Enemies container if it exists
-	var level = get_tree().current_scene
+	var tree = get_tree()
+	var level = tree.current_scene if tree else null
 	if level:
 		if level.has_node("Enemies"):
 			level.get_node("Enemies").add_child(enemy)

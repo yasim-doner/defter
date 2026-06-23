@@ -16,6 +16,8 @@
 [ext_resource type="PackedScene" uid="uid://c4n1t8vyu7r05" path="res://scenes/pressure_plate.tscn" id="14_plate"]
 [ext_resource type="Script" uid="uid://dr58yoytl621s" path="res://scripts/death_zone.gd" id="15_3gjqj"]
 [ext_resource type="PackedScene" uid="uid://b7s5gvyrxco03" path="res://scenes/letter.tscn" id="15_letter"]
+[ext_resource type="PackedScene" uid="uid://cb5rvtcy8b172" path="res://scenes/moving_platform.tscn" id="17_na6ls"]
+[ext_resource type="PackedScene" uid="uid://c4n1t8vyu7r06" path="res://scenes/level_transition.tscn" id="18_transition"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
 radius = 8.0
@@ -65,6 +67,8 @@ custom_data_layer_0/name = "is_spike"
 custom_data_layer_0/type = 1
 sources/0 = SubResource("TileSetAtlasSource_5g1s2")
 
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_riqys"]
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
 bg_color = Color(0.992157, 0.984314, 0.968627, 1)
 border_width_left = 2
@@ -100,8 +104,6 @@ corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
-
-[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_riqys"]
 
 [node name="Level1" type="Node2D" unique_id=1753699881]
 script = ExtResource("1_level")
@@ -147,7 +149,7 @@ script = ExtResource("3_gun")
 [node name="Bullets" type="Node2D" parent="." unique_id=1491174582]
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1876221026]
-tile_map_data = PackedByteArray("AAABABgAAAAAAAEAAAACABgAAAAAAAEAAAADABgAAAAAAAEAAAAEABgAAAAAAAEAAAAFABgAAAAAAAIAACAJABgAAAAAAAAAAAAKABgAAAAAAAEAAAALABgAAAAAAAEAAAAOABoAAAACAAAAAAAPABoAAAADAAAAAAARABUAAAAEAAIAAAARABIAAAAEAAIAAAARABMAAAAEAAIAAAARABQAAAAEAAIAAAARABAAAAAEAAIAAAARABEAAAAEAAIAAAARAA0AAAAEAAIAAAARAA4AAAAEAAIAAAARAA8AAAAEAAIAAAARAAwAAAAEAAIAAAARAAkAAAAEAAIAAAARAAoAAAAEAAIAAAARAAsAAAAEAAIAAAARAAgAAAAEAAIAAAAPAAcAAAAAAAEAAAAQAAcAAAAAAAEAAAAMABoAAAAEAAAAAAALABoAAAACAAAAAAAGABoAAAACAAAAAAAHABoAAAADAAAAAAAIABoAAAAEAAAAAAAQABkAAAAAAAEAAAAHABgAAAAAAAIAAAAQABoAAAAEAAAAAAARABoAAAACAAAAAGARABkAAAAEAAAAAGASABkAAAAAAAMAAAARABYAAAAEAAIAAAARABcAAAAEAAMAAAANAAAAAAACAAEAAAANAAEAAAACAAIAAAANAAIAAAACAAIAAAANAAMAAAACAAMAAAALAAQAAAAAAAAAAAAKAAQAAAAAAAAAAAAJABoAAAAAAAMAACAKABoAAAAAAAMAACAMABsAAAAAAAMAAHAOABsAAAAAAAMAAGARAAcAAAAEAAEAAAAEABoAAAAAAAAAAAA=")
+tile_map_data = PackedByteArray("AAABABgAAAAAAAEAAAACABgAAAAAAAEAAAADABgAAAAAAAEAAAAEABgAAAAAAAEAAAAKABgAAAAAAAEAAAALABgAAAAAAAEAAAAOABoAAAACAAAAAAAPABoAAAADAAAAAAARABUAAAAEAAIAAAARABIAAAAEAAIAAAARABMAAAAEAAIAAAARABQAAAAEAAIAAAARABAAAAAEAAIAAAARABEAAAAEAAIAAAARAA0AAAAEAAIAAAARAA4AAAAEAAIAAAARAA8AAAAEAAIAAAARAAwAAAAEAAIAAAARAAkAAAAEAAIAAAARAAoAAAAEAAIAAAARAAsAAAAEAAIAAAARAAgAAAAEAAIAAAAPAAcAAAAAAAEAAAAQAAcAAAAAAAEAAAAMABoAAAAEAAAAAAALABoAAAACAAAAAAAGABoAAAACAAAAAAAHABoAAAADAAAAAAAIABoAAAAEAAAAAAAQABkAAAAAAAEAAAAQABoAAAAEAAAAAAARABoAAAACAAAAAGARABkAAAAEAAAAAGASABkAAAAAAAMAAAARABYAAAAEAAIAAAARABcAAAAEAAMAAAANAAAAAAACAAEAAAANAAEAAAACAAIAAAANAAIAAAACAAIAAAANAAMAAAACAAMAAAALAAQAAAAAAAAAAAAKAAQAAAAAAAAAAAAJABoAAAAAAAMAACAKABoAAAAAAAMAACAMABsAAAAAAAMAAHAOABsAAAAAAAMAAGARAAcAAAAEAAEAAAAEABoAAAAAAAAAAAA=")
 tile_set = SubResource("TileSet_dxoup")
 
 [node name="Chute" parent="." unique_id=1557057324 instance=ExtResource("9_5g1s2")]
@@ -170,6 +172,7 @@ speed = 0.0
 [node name="WindDraft" parent="." unique_id=1727304534 instance=ExtResource("12_aiv1b")]
 position = Vector2(1726, 2022)
 speed = 500.0
+is_on = false
 height = 3150.0
 
 [node name="WindSwitch" parent="." unique_id=20261915 instance=ExtResource("13_switch")]
@@ -178,26 +181,37 @@ wind_draft_path = NodePath("../WindDraft")
 
 [node name="ParachuteArea" parent="." unique_id=1983574243 instance=ExtResource("8_parachute")]
 position = Vector2(1366, 3104)
-parachute_duration = 100.0
+parachute_duration = 6.0
 
 [node name="ParachuteArea2" parent="." unique_id=1721257749 instance=ExtResource("8_parachute")]
 position = Vector2(1356, 3405)
 parachute_duration = 3.0
 
-[node name="PressurePlate1" parent="." unique_id=987654321 instance=ExtResource("14_plate")]
-position = Vector2(1315, 604)
-
-[node name="PressurePlate2" parent="." unique_id=987654322 instance=ExtResource("14_plate")]
-position = Vector2(1448, 605)
-
 [node name="Letter1" parent="." unique_id=1289371081 instance=ExtResource("15_letter")]
 position = Vector2(320, 3050)
-mass = 1.5
+mass = 0.4
 bounciness = 0.75
 
 [node name="Letter2" parent="." unique_id=1289371082 instance=ExtResource("15_letter")]
 position = Vector2(350, 3050)
 mass = 4.0
+
+[node name="Area2D" type="Area2D" parent="." unique_id=1444110185]
+script = ExtResource("15_3gjqj")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=831139359]
+position = Vector2(1262, 3759.5)
+shape = SubResource("WorldBoundaryShape2D_riqys")
+
+[node name="PressurePlate" parent="." unique_id=1613045869 instance=ExtResource("14_plate")]
+position = Vector2(459, 3134)
+
+[node name="PressurePlate3" parent="." unique_id=997302990 instance=ExtResource("14_plate")]
+position = Vector2(1471, 3133)
+
+[node name="LevelTransition" parent="." unique_id=997302991 instance=ExtResource("18_transition")]
+position = Vector2(990, 3098)
+target_scene = "res://Level2.tscn"
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1795732186]
 
@@ -362,9 +376,13 @@ text = "Press [E] to Glide"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Area2D" type="Area2D" parent="." unique_id=1444110185]
-script = ExtResource("15_3gjqj")
+[node name="MovingPlatform" parent="." unique_id=1699188921 instance=ExtResource("17_na6ls")]
+position = Vector2(985, 2674)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=831139359]
-position = Vector2(1262, 3759.5)
-shape = SubResource("WorldBoundaryShape2D_riqys")
+[node name="Marker2D" parent="MovingPlatform" index="2" unique_id=496747990]
+position = Vector2(0, 400)
+
+[connection signal="pressed_state_changed" from="PressurePlate" to="MovingPlatform" method="_on_pressure_plate_pressed_state_changed"]
+[connection signal="pressed_state_changed" from="PressurePlate3" to="MovingPlatform" method="_on_pressure_plate_3_pressed_state_changed"]
+
+[editable path="MovingPlatform"]

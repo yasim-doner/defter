@@ -66,6 +66,8 @@ var active_parachute_area: Area2D = null
 var active_parachute_node: Area2D = null
 var is_parachute_broken: bool = false
 var parachute_hold_time: float = 0.0
+var is_near_level_transition: bool = false
+var active_level_transition: Area2D = null
 const PARACHUTE_HOLD_REQUIRED: float = 1.0
 var teleport_cooldown: float = 0.0
 var active_wind_drafts: Array = []
@@ -77,8 +79,10 @@ var is_carrying_letter: bool = false
 var is_dragging_letter: bool = false
 var carried_letter_mass: float = 1.0
 var dragged_letter_node: CharacterBody2D = null
+var active_letter_node: CharacterBody2D = null
 
 func _ready() -> void:
+	add_to_group("players")
 	platform_floor_layers = 0
 	_setup_input_actions()
 	if name == "Player1":
@@ -89,7 +93,10 @@ func _ready() -> void:
 		pen_color = Color("#1a3a60") # Blue pen ink
 	_setup_sprite()
 	
-	pass
+	if name == "Player1" and GameManager.player1_weapon_lines.size() > 0:
+		set_weapon_lines(GameManager.player1_weapon_lines)
+	elif name == "Player2" and GameManager.player2_weapon_lines.size() > 0:
+		set_weapon_lines(GameManager.player2_weapon_lines)
 
 # Per-player frame set (p1 = şapka, p2 = bandana); shared set as fallback.
 func _frames_path() -> String:
@@ -123,7 +130,10 @@ func setup_camera() -> void:
 		camera.position_smoothing_speed = 5.0
 		
 		# Prevent camera from showing outside page boundaries by scanning the backgrounds
-		var scene = get_tree().current_scene
+		var scene = get_parent()
+		while scene and not scene.has_node("Backgrounds"):
+			scene = scene.get_parent()
+			
 		if scene:
 			var bg_container = scene.get_node_or_null("Backgrounds")
 			if bg_container and bg_container.get_child_count() > 0:
@@ -182,6 +192,10 @@ func set_weapon_lines(new_lines: Array) -> void:
 	if has_node("DrawnGun"):
 		$DrawnGun.lines = new_lines
 	if is_local():
+		if name == "Player1":
+			GameManager.player1_weapon_lines = new_lines
+		elif name == "Player2":
+			GameManager.player2_weapon_lines = new_lines
 		sync_weapon_drawing.rpc(new_lines)
 
 @rpc("any_peer", "reliable")
@@ -189,6 +203,10 @@ func sync_weapon_drawing(new_lines: Array) -> void:
 	if not is_local():
 		if has_node("DrawnGun"):
 			$DrawnGun.lines = new_lines
+		if name == "Player1":
+			GameManager.player1_weapon_lines = new_lines
+		elif name == "Player2":
+			GameManager.player2_weapon_lines = new_lines
 
 func die() -> void:
 	if is_noclip:
@@ -196,12 +214,11 @@ func die() -> void:
 	
 	var is_server = not multiplayer or not multiplayer.has_multiplayer_peer() or multiplayer.is_server()
 	if is_local() or is_server:
-		var level = get_node_or_null("/root/Level1")
-		if level and level.has_method("sync_global_death"):
+		if GameManager:
 			if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
-				level.sync_global_death.rpc()
+				GameManager.sync_global_death.rpc()
 			else:
-				level.sync_global_death()
+				GameManager.sync_global_death()
 		else:
 			if is_parachute_active:
 				sync_deactivate_parachute.rpc()
@@ -236,10 +253,78 @@ func _input(event: InputEvent) -> void:
 			$CollisionShape2D.set_deferred("disabled", is_noclip)
 		
 	if event.is_action_pressed("interact"):
+		# 1. Prioritize active interactables (e.g. wind switch, doors, custom triggers)
 		var current_interactable = active_interactables.back() if not active_interactables.is_empty() else null
 		if current_interactable:
 			if current_interactable.has_method("interact"):
 				current_interactable.interact(self)
+				get_viewport().set_input_as_handled()
+				return
+				
+		# 2. Prioritize parachute area activation or level transition area
+		if (is_near_parachute_area and not is_parachute_active and not is_parachute_broken) or is_near_level_transition:
+			get_viewport().set_input_as_handled()
+			return
+			
+		# 3. Prioritize deactivating/shooting an active parachute
+		if is_parachute_active:
+			if is_instance_valid(active_parachute_node) and active_parachute_node.has_method("shoot_parachute"):
+				active_parachute_node.shoot_parachute()
+				get_viewport().set_input_as_handled()
+				return
+			
+		# 4. Prioritize dropping/releasing the active letter
+		if is_instance_valid(active_letter_node):
+			if active_letter_node.has_method("drop_letter"):
+				active_letter_node.drop_letter()
+				get_viewport().set_input_as_handled()
+				return
+				
+		# 5. Drag the closest letter within 40px
+		var closest_letter = null
+		var min_dist = 40.0
+		for letter in get_tree().get_nodes_in_group("letters"):
+			if is_instance_valid(letter) and letter.get("state") == 0: # State.IDLE is 0
+				var dist = global_position.distance_to(letter.global_position)
+				if dist <= min_dist:
+					closest_letter = letter
+					min_dist = dist
+		if closest_letter:
+			if closest_letter.has_method("start_dragging_by_player"):
+				closest_letter.start_dragging_by_player(self)
+				get_viewport().set_input_as_handled()
+				return
+
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_Q:
+			# 1. Prioritize throwing the carried letter
+			if is_instance_valid(active_letter_node) and is_carrying_letter:
+				if active_letter_node.has_method("throw_letter"):
+					active_letter_node.throw_letter()
+					get_viewport().set_input_as_handled()
+					return
+			# 2. Prioritize carrying the dragged letter
+			elif is_instance_valid(active_letter_node) and is_dragging_letter:
+				if active_letter_node.get("mass") <= 3.0:
+					if active_letter_node.has_method("start_carrying_by_player"):
+						active_letter_node.start_carrying_by_player(self)
+						get_viewport().set_input_as_handled()
+						return
+			# 3. Carry a nearby letter directly from idle
+			elif not is_carrying_letter and not is_dragging_letter:
+				var closest_letter = null
+				var min_dist = 40.0
+				for letter in get_tree().get_nodes_in_group("letters"):
+					if is_instance_valid(letter) and letter.get("state") == 0:
+						var dist = global_position.distance_to(letter.global_position)
+						if dist <= min_dist:
+							closest_letter = letter
+							min_dist = dist
+				if closest_letter and closest_letter.get("mass") <= 3.0:
+					if closest_letter.has_method("start_carrying_by_player"):
+						closest_letter.start_carrying_by_player(self)
+						get_viewport().set_input_as_handled()
+						return
 			
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -291,12 +376,16 @@ func sync_shoot_parachute(launch_velocity: Vector2) -> void:
 		active_parachute_node.is_active = false
 		if "reattach_cooldown" in active_parachute_node:
 			active_parachute_node.reattach_cooldown = 1.0
+		if "lifetime" in active_parachute_node and "active_duration" in active_parachute_node:
+			active_parachute_node.lifetime = active_parachute_node.active_duration
 		
 		# Reparent to root so we move independently
 		var old_global_pos = active_parachute_node.global_position
 		if active_parachute_node.get_parent():
 			active_parachute_node.get_parent().remove_child(active_parachute_node)
-		get_tree().current_scene.add_child(active_parachute_node)
+		var tree = get_tree()
+		if tree and tree.current_scene:
+			tree.current_scene.add_child(active_parachute_node)
 		active_parachute_node.global_position = old_global_pos
 		
 		active_parachute_node = null
@@ -317,7 +406,10 @@ func sync_catch_parachute(parachute_path: NodePath) -> void:
 		
 		# Reactivate it
 		parachute.is_active = true
-		parachute.active_duration = parachute.parachute_duration
+		if "lifetime" in parachute:
+			parachute.active_duration = maxf(parachute.lifetime, 3.0)
+		else:
+			parachute.active_duration = 3.0
 		if "bounce_count" in parachute:
 			parachute.bounce_count = 0
 		
@@ -384,9 +476,8 @@ func _physics_process(delta: float) -> void:
 	if not is_inside_tree() or get_viewport() == null:
 		return
 		
-	# Check pause state from Main
-	var main = get_parent()
-	if main and main.get("is_game_paused") == true:
+	# Check pause state
+	if GameManager.is_game_paused:
 		velocity = Vector2.ZERO
 		return
 
@@ -481,16 +572,25 @@ func _physics_process(delta: float) -> void:
 		teleport_cooldown -= delta
 
 	# Update interaction prompt visibility for local player
-	var prompt = get_node_or_null("/root/Level1/UI/InteractionPrompt")
-	if prompt:
-		var current_interactable = active_interactables.back() if not active_interactables.is_empty() else null
-		if current_interactable:
-			prompt.text = current_interactable.get("prompt_text") if "prompt_text" in current_interactable else "Press E to Interact"
-			prompt.visible = true
-		else:
-			prompt.visible = is_near_parachute_area and not is_parachute_active
-			if prompt.visible:
-				prompt.text = "Hold E to Glide"
+	if is_local():
+		var prompt = null
+		var current_scene = get_tree().current_scene
+		if current_scene:
+			prompt = current_scene.get_node_or_null("UI/InteractionPrompt")
+		if prompt:
+			var current_interactable = active_interactables.back() if not active_interactables.is_empty() else null
+			if current_interactable:
+				prompt.text = current_interactable.get("prompt_text") if "prompt_text" in current_interactable else "Press E to Interact"
+				prompt.visible = true
+			else:
+				prompt.visible = (is_near_parachute_area and not is_parachute_active) or is_near_level_transition
+				if prompt.visible:
+					if is_near_level_transition and active_level_transition:
+						prompt.text = active_level_transition.get("prompt_text")
+					else:
+						prompt.text = "Hold E to Glide"
+	if is_instance_valid(active_level_transition):
+		queue_redraw()
 
 	# Update coyote jump window
 	if is_on_floor():
@@ -816,3 +916,27 @@ func _draw() -> void:
 		draw_line(Vector2(e_left, e_top), Vector2(e_right, e_top), line_color, 2.0) # top bar
 		draw_line(Vector2(e_left, center.y), Vector2(e_right - 2, center.y), line_color, 2.0) # middle bar
 		draw_line(Vector2(e_left, e_bottom), Vector2(e_right, e_bottom), line_color, 2.0) # bottom bar
+
+	# Draw loading E circle if holding E near level transition
+	if is_instance_valid(active_level_transition):
+		var progress = active_level_transition.get_player_progress(name)
+		if progress > 0.0:
+			var center = Vector2(0, -55) # Position above player's head
+			var radius = 16.0
+			var progress_ratio = progress / active_level_transition.hold_required_time
+			
+			# Draw background circle outline (faint graphite)
+			draw_arc(center, radius, 0, PI * 2, 32, Color(0.6, 0.6, 0.6, 0.3), 3.0, true)
+			# Draw progress fill arc
+			draw_arc(center, radius, -PI / 2, -PI / 2 + progress_ratio * PI * 2, 32, pen_color, 3.0, true)
+			
+			# Draw a hand-drawn look 'E' inside the circle
+			var line_color = pen_color
+			var e_left = center.x - 4
+			var e_right = center.x + 4
+			var e_top = center.y - 5
+			var e_bottom = center.y + 5
+			draw_line(Vector2(e_left, e_top), Vector2(e_left, e_bottom), line_color, 2.0) # spine
+			draw_line(Vector2(e_left, e_top), Vector2(e_right, e_top), line_color, 2.0) # top bar
+			draw_line(Vector2(e_left, center.y), Vector2(e_right - 2, center.y), line_color, 2.0) # middle bar
+			draw_line(Vector2(e_left, e_bottom), Vector2(e_right, e_bottom), line_color, 2.0) # bottom bar

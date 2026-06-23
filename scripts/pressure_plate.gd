@@ -2,8 +2,6 @@ extends Area2D
 
 signal pressed_state_changed(is_pressed: bool)
 
-@export var button_id: String = "finish"
-
 var is_pressed: bool = false
 var pressed_objects: Array = []
 var wiggle_seed: float = 0.0

@@ -64,7 +64,7 @@ func _on_peer_connected(_id: int) -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func start_game() -> void:
-	get_tree().change_scene_to_file("res://Level1.tscn")
+	get_tree().change_scene_to_file("res://Level_1.tscn")
 
 func _on_connected_ok() -> void:
 	status_label.text = "Connected to host!"

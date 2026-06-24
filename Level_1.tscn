@@ -1,0 +1,125 @@
+[gd_scene format=4 uid="uid://ed0wjc2eqmno"]
+
+[ext_resource type="PackedScene" uid="uid://bt3gfge17sbhm" path="res://scenes/base_level.tscn" id="1_ar1si"]
+[ext_resource type="Texture2D" uid="uid://deiow8v3e8n3a" path="res://assets/Resim (11).jpg" id="2_6fba8"]
+[ext_resource type="PackedScene" path="res://scenes/pen.tscn" id="3_yaehp"]
+[ext_resource type="PackedScene" path="res://scenes/chute.tscn" id="4_d1osm"]
+[ext_resource type="PackedScene" uid="uid://bq684rocxfa6e" path="res://scenes/enemy_spawner.tscn" id="5_ie7uf"]
+[ext_resource type="PackedScene" uid="uid://ngrwcp3h2mqr" path="res://scenes/wind_draft.tscn" id="6_gwx4l"]
+[ext_resource type="PackedScene" path="res://scenes/wind_switch.tscn" id="7_fkbji"]
+[ext_resource type="PackedScene" uid="uid://cx6i8d7f2ghk" path="res://scenes/parachute_area.tscn" id="8_6eo5x"]
+[ext_resource type="Script" uid="uid://dr58yoytl621s" path="res://scripts/death_zone.gd" id="9_3fa85"]
+[ext_resource type="PackedScene" uid="uid://c4n1t8vyu7r05" path="res://scenes/pressure_plate.tscn" id="10_8xl1m"]
+[ext_resource type="PackedScene" uid="uid://c4n1t8vyu7r06" path="res://scenes/level_transition.tscn" id="11_bwsuy"]
+[ext_resource type="PackedScene" uid="uid://cb5rvtcy8b172" path="res://scenes/moving_platform.tscn" id="12_nvhjt"]
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_3qd3g"]
+
+[node name="Level_1" unique_id=1753699881 instance=ExtResource("1_ar1si")]
+spawn_p1 = Vector2(250, 3100)
+spawn_p2 = Vector2(400, 3100)
+
+[node name="Page1" type="Sprite2D" parent="Backgrounds" parent_id_path=PackedInt32Array(695623457) index="0" unique_id=2032782587]
+position = Vector2(1249, 1711)
+texture = ExtResource("2_6fba8")
+
+[node name="Pen3" parent="Pens" parent_id_path=PackedInt32Array(409736343) index="0" unique_id=1845275001 instance=ExtResource("3_yaehp")]
+position = Vector2(575.40405, 3373.7285)
+
+[node name="Pen2" parent="Pens" parent_id_path=PackedInt32Array(409736343) index="1" unique_id=645507101 instance=ExtResource("3_yaehp")]
+position = Vector2(2071, 912)
+
+[node name="TileMapLayer" parent="." index="6" unique_id=1876221026]
+tile_map_data = PackedByteArray("AAARABcAAAAEAAMAAAARABYAAAAEAAIAAAARABUAAAAEAAIAAAARABQAAAAEAAIAAAARABMAAAAEAAIAAAARABIAAAAEAAIAAAARABEAAAAEAAIAAAARABAAAAAEAAIAAAARAA8AAAAEAAIAAAARAA4AAAAEAAIAAAARAA0AAAAEAAIAAAARAAwAAAAEAAIAAAARAAsAAAAEAAIAAAARAAoAAAAEAAIAAAARAAkAAAAEAAIAAAARAAgAAAAEAAIAAAARAAcAAAAEAAEAAAAQAAcAAAAAAAEAAAAPAAcAAAAAAAEAAAAKAAYAAAACAAAAAAAKAAgAAAACAAAAAAACAAcAAAACAAAAAAALAAYAAAAEAAAAAAALAAgAAAAEAAAAAAADAAcAAAAEAAAAAAABAAgAAAADAAAAAGAMAAcAAAADAAAAAHAMAAkAAAADAAAAAHAMAA0AAAADAAAAAHAMAA4AAAADAAAAAHAMAA8AAAADAAAAAHALABEAAAADAAAAACAMABAAAAAEAAAAAFAMAAwAAAACAAAAAFALABAAAAAAAAAAAAAKABAAAAAAAAAAAAAJABAAAAAAAAAAAAAHABAAAAAAAAAAAAAGABAAAAAAAAAAAAAFABAAAAAAAAAAAAAEABAAAAAAAAAAAAACABEAAAAAAAAAAAAIABEAAAAAAAAAAAADABIAAAAAAAEAAAADABEAAAAAAAMAAAAFAAsAAAACAAMAAGAEAAsAAAACAAIAAGADAAsAAAACAAIAAGACAAsAAAACAAIAAGABAAsAAAACAAIAAGAAAAsAAAACAAIAAGD//wsAAAACAAEAAGALAAcAAAAAAAMAACAKAAcAAAAAAAMAACALAAkAAAAAAAMAACAKAAkAAAAAAAMAACACAAgAAAAAAAMAACADAAgAAAAAAAMAACABABgAAAAAAAEAAAACABgAAAAAAAEAAAADABgAAAAAAAEAAAAEABgAAAAAAAEAAAAEABoAAAAAAAAAAAAGABoAAAACAAAAAAAHABoAAAADAAAAAAAIABoAAAAEAAAAAAALABoAAAACAAAAAAAMABoAAAAEAAAAAAAQABoAAAAEAAAAAAAOABoAAAACAAAAAAAPABoAAAADAAAAAAARABoAAAACAAAAAGARABkAAAAEAAAAAGAQABkAAAAAAAAAAAASABgAAAAAAAMAACANAAMAAAACAAMAAAANAAIAAAACAAIAAAANAAEAAAACAAIAAAANAAAAAAACAAEAAAAGAAMAAAAAAAEAAAAJABoAAAAAAAMAACAKABoAAAAAAAMAACAFABMAAAAAAAEAAAAKABgAAAAAAAEAAAALABgAAAAAAAEAAAA=")
+
+[node name="Chute" parent="." index="7" unique_id=109353768 instance=ExtResource("4_d1osm")]
+position = Vector2(2243, 3050)
+rotation = 1.5707964
+chute_id = "1"
+
+[node name="Chute2" parent="." index="8" unique_id=627682053 instance=ExtResource("4_d1osm")]
+position = Vector2(2239, 945)
+rotation = 4.712389
+chute_id = "1"
+
+[node name="EnemySpawner" parent="." index="9" unique_id=1880600777 instance=ExtResource("5_ie7uf")]
+position = Vector2(1728.0001, 116)
+spawn_rate = 1.0
+max_enemies = 10
+patrol_range = 0.0
+speed = 50.0
+
+[node name="WindDraft" parent="." index="10" unique_id=869097853 instance=ExtResource("6_gwx4l")]
+position = Vector2(1726, 2019)
+speed = 500.0
+is_on = false
+height = 3150.0
+
+[node name="WindSwitch" parent="." index="11" unique_id=185655521 instance=ExtResource("7_fkbji")]
+position = Vector2(1970, 896)
+is_on = false
+
+[node name="ParachuteArea" parent="." index="12" unique_id=434180096 instance=ExtResource("8_6eo5x")]
+position = Vector2(1366, 3101)
+
+[node name="ParachuteArea2" parent="." index="13" unique_id=329538712 instance=ExtResource("8_6eo5x")]
+position = Vector2(1356, 3402)
+parachute_duration = 5.0
+
+[node name="Area2D" type="Area2D" parent="." index="14" unique_id=883943788]
+position = Vector2(0, -3)
+script = ExtResource("9_3fa85")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" index="0" unique_id=486679143]
+position = Vector2(1262, 3759.5)
+shape = SubResource("WorldBoundaryShape2D_3qd3g")
+
+[node name="PressurePlate" parent="." index="15" unique_id=1370028829 instance=ExtResource("10_8xl1m")]
+position = Vector2(459, 3131)
+
+[node name="PressurePlate3" parent="." index="16" unique_id=1082041356 instance=ExtResource("10_8xl1m")]
+position = Vector2(1471, 3130)
+
+[node name="LevelTransition" parent="." index="17" unique_id=1571917349 instance=ExtResource("11_bwsuy")]
+position = Vector2(990, 3095)
+target_scene = "res://Level2.tscn"
+
+[node name="MovingPlatform" parent="." index="18" unique_id=92933019 instance=ExtResource("12_nvhjt")]
+position = Vector2(985, 2671)
+
+[node name="Marker2D" parent="MovingPlatform" index="2" unique_id=496747990]
+position = Vector2(0, 400)
+
+[node name="Pen" parent="." index="19" unique_id=329765511 instance=ExtResource("3_yaehp")]
+position = Vector2(831, 407)
+
+[node name="WindDraft2" parent="." index="20" unique_id=1801961295 instance=ExtResource("6_gwx4l")]
+position = Vector2(1609, 1466)
+direction = 3
+speed = 200.0
+is_on = false
+height = 1800.0
+thickness = 120.0
+
+[node name="PressurePlate2" parent="." index="21" unique_id=197502356 instance=ExtResource("10_8xl1m")]
+position = Vector2(513, 1435)
+
+[node name="MovingPlatform2" parent="." index="22" unique_id=507577701 instance=ExtResource("12_nvhjt")]
+position = Vector2(1087, 2141)
+
+[node name="Marker2D" parent="MovingPlatform2" index="2" unique_id=496747990]
+position = Vector2(0, -273)
+
+[node name="LevelTransition2" parent="." index="23" unique_id=1753990366 instance=ExtResource("11_bwsuy")]
+position = Vector2(988, 2652)
+
+[node name="LevelTransition3" parent="." index="24" unique_id=1667576410 instance=ExtResource("11_bwsuy")]
+position = Vector2(1087, 1867)
+
+[node name="LevelTransition4" parent="." index="25" unique_id=1188887125 instance=ExtResource("11_bwsuy")]
+position = Vector2(1879, 2915)
+scale = Vector2(2, 2)
+hold_required_time = 1.0
+
+[editable path="MovingPlatform"]
+[editable path="MovingPlatform2"]

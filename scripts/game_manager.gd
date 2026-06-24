@@ -8,7 +8,7 @@ var player1_weapon_lines: Array = []
 var player2_weapon_lines: Array = []
 
 var levels: Array[String] = [
-	"res://Level1.tscn",
+	"res://Level_1.tscn",
 	"res://Level2.tscn"
 ]
 

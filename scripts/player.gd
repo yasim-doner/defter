@@ -298,7 +298,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_Q:
 			# 1. Prioritize throwing the carried letter
-			if is_instance_valid(active_letter_node) and is_carrying_letter:
+			if is_instance_valid(active_letter_node) and is_carrying_letter and not is_dragging_letter:
 				if active_letter_node.has_method("throw_letter"):
 					active_letter_node.throw_letter()
 					get_viewport().set_input_as_handled()
@@ -520,6 +520,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y = v_dir * SPEED * 2.0
 		
 		move_and_slide()
+		fall_start_y = global_position.y # Reset fall height during noclip flight
 		
 		# Send updated local player state to the remote peer
 		var gun_rot = 0.0
@@ -691,6 +692,41 @@ func _physics_process(delta: float) -> void:
 
 	if is_dragging_letter:
 		velocity.x *= (1.0 - 0.45 * carried_letter_mass * delta)
+
+	if is_dragging_letter and is_instance_valid(dragged_letter_node):
+		var arm_offset = Vector2(dragged_letter_node.drag_offset_x, -12.0 * dragged_letter_node.scale.y)
+		var target_pos = global_position + arm_offset
+		
+		# Rigid distance constraint between the letter and target_pos (arm endpoint)
+		var v = dragged_letter_node.global_position - target_pos
+		var dist = v.length()
+		var max_dist = 8.0 # Very tight slack to represent a rigid arm holding it
+		
+		if dist > max_dist:
+			var dir = v.normalized()
+			
+			# Relative velocity along constraint normal
+			var relative_vel = dragged_letter_node.velocity - velocity
+			var vel_along_normal = relative_vel.dot(dir)
+			
+			var player_inv_mass = 1.0 # Assuming player mass = 1.0
+			var letter_inv_mass = 1.0 / dragged_letter_node.mass
+			var total_inv_mass = player_inv_mass + letter_inv_mass
+			
+			if vel_along_normal > 0.0:
+				# Velocity projection impulse to prevent stretching
+				var impulse = vel_along_normal / total_inv_mass
+				velocity += (impulse * player_inv_mass) * dir
+				dragged_letter_node.velocity -= (impulse * letter_inv_mass) * dir
+				
+			# Position correction to maintain rigid distance
+			var penetration = dist - max_dist
+			penetration = minf(penetration, 15.0) # Clamp penetration to prevent explosive teleports
+			var correction_factor = 0.9 # High stiffness for position correction
+			var correction = (penetration / total_inv_mass) * correction_factor
+			
+			global_position += (correction * player_inv_mass) * dir
+			dragged_letter_node.global_position -= (correction * letter_inv_mass) * dir
 
 	var has_drag_exception = false
 	if is_dragging_letter and is_instance_valid(dragged_letter_node):

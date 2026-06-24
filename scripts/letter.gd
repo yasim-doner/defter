@@ -87,38 +87,34 @@ func _physics_process(delta: float) -> void:
 			if is_instance_valid(player):
 				if state == State.DRAGGING:
 					var distance = global_position.distance_to(player.global_position)
-					if distance > 100.0:
+					if distance > 400.0: # Failsafe disconnect if pulled too far
 						_stop_carrying(player, Vector2.ZERO)
 						return
 						
-					var shape_height = 12.0 * scale.y
+					var shape_height = 8.0 * scale.y
 					var target_pos = player.global_position + Vector2(drag_offset_x, -shape_height)
 					
 					if carried_by_id == local_id:
 						# Physics-based dragging with forces to avoid snapping
 						var diff = target_pos - global_position
-						if diff.length() > 200.0:
-							global_position = target_pos
-							velocity = Vector2.ZERO
-						else:
-							var k = 800.0 / mass # Spring constant (stiffness)
-							var damp = 15.0      # Damping relative to player's movement
+						var k = minf(5000.0 / mass, 1000.0) # Cap stiffness to maintain Euler integration stability
+						var damp = 2.0 * sqrt(k)            # Mathematically perfect critical damping
+						
+						var acc = Vector2.ZERO
+						# Spring force and relative damping to match player's velocity
+						acc.x = k * diff.x - damp * (velocity.x - player.velocity.x)
+						acc.y = k * diff.y - damp * (velocity.y - player.velocity.y)
+						
+						# Input-based force to help push/pull based on player's movement direction
+						var input_dir = Input.get_axis("move_left", "move_right")
+						if input_dir != 0:
+							acc.x += input_dir * (650.0 / mass)
 							
-							var acc = Vector2.ZERO
-							# Spring force and relative damping to match player's velocity
-							acc.x = k * diff.x - damp * (velocity.x - player.velocity.x)
-							acc.y = k * diff.y - damp * (velocity.y - player.velocity.y)
-							
-							# Input-based force to help push/pull based on player's movement direction
-							var input_dir = Input.get_axis("move_left", "move_right")
-							if input_dir != 0:
-								acc.x += input_dir * (650.0 / mass)
-								
-							velocity += acc * delta
+						velocity += acc * delta
 					else:
 						# For remote players, keep position near the target to prevent drifting
 						var diff = target_pos - global_position
-						if diff.length() > 50.0:
+						if diff.length() > 400.0: # Failsafe sync snap
 							global_position = target_pos
 					
 					move_and_slide()

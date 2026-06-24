@@ -86,6 +86,11 @@ func _process(delta: float) -> void:
 @rpc("any_peer", "call_local", "reliable")
 func sync_progress(player_name: String, progress_val: float) -> void:
 	players_progress[player_name] = progress_val
+	var tree = get_tree()
+	if tree and tree.current_scene:
+		var player = tree.current_scene.get_node_or_null(player_name)
+		if player and player.has_method("queue_redraw"):
+			player.queue_redraw()
 
 func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("players"):
@@ -112,6 +117,9 @@ func _on_body_exited(body: Node2D) -> void:
 			players_progress[body.name] = 0.0
 			if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
 				sync_progress.rpc(body.name, 0.0)
+				
+			if body.has_method("queue_redraw"):
+				body.queue_redraw()
 
 func _get_local_player() -> CharacterBody2D:
 	for player in get_tree().get_nodes_in_group("players"):

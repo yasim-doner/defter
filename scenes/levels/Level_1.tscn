@@ -30,7 +30,7 @@ position = Vector2(575.40405, 3373.7285)
 position = Vector2(2071, 912)
 
 [node name="TileMapLayer" parent="." index="6" unique_id=1876221026]
-tile_map_data = PackedByteArray("AAARABcAAAAEAAMAAAARABYAAAAEAAIAAAARABUAAAAEAAIAAAARABQAAAAEAAIAAAARABMAAAAEAAIAAAARABIAAAAEAAIAAAARABEAAAAEAAIAAAARABAAAAAEAAIAAAARAA8AAAAEAAIAAAARAA4AAAAEAAIAAAARAA0AAAAEAAIAAAARAAwAAAAEAAIAAAARAAsAAAAEAAIAAAARAAoAAAAEAAIAAAARAAkAAAAEAAIAAAARAAgAAAAEAAIAAAARAAcAAAAEAAEAAAAQAAcAAAAAAAEAAAAPAAcAAAAAAAEAAAAKAAYAAAACAAAAAAAKAAgAAAACAAAAAAACAAcAAAACAAAAAAALAAYAAAAEAAAAAAALAAgAAAAEAAAAAAADAAcAAAAEAAAAAAABAAgAAAADAAAAAGAMAAcAAAADAAAAAHAMAAkAAAADAAAAAHAMAA0AAAADAAAAAHAMAA4AAAADAAAAAHAMAA8AAAADAAAAAHALABEAAAADAAAAACAMABAAAAAEAAAAAFAMAAwAAAACAAAAAFALABAAAAAAAAAAAAAKABAAAAAAAAAAAAAJABAAAAAAAAAAAAAHABAAAAAAAAAAAAAGABAAAAAAAAAAAAAFABAAAAAAAAAAAAAEABAAAAAAAAAAAAACABEAAAAAAAAAAAAIABEAAAAAAAAAAAADABIAAAAAAAEAAAADABEAAAAAAAMAAAAFAAsAAAACAAMAAGAEAAsAAAACAAIAAGADAAsAAAACAAIAAGACAAsAAAACAAIAAGABAAsAAAACAAIAAGAAAAsAAAACAAIAAGD//wsAAAACAAEAAGALAAcAAAAAAAMAACAKAAcAAAAAAAMAACALAAkAAAAAAAMAACAKAAkAAAAAAAMAACACAAgAAAAAAAMAACADAAgAAAAAAAMAACABABgAAAAAAAEAAAACABgAAAAAAAEAAAADABgAAAAAAAEAAAAEABgAAAAAAAEAAAAEABoAAAAAAAAAAAAGABoAAAACAAAAAAAHABoAAAADAAAAAAAIABoAAAAEAAAAAAALABoAAAACAAAAAAAMABoAAAAEAAAAAAAQABoAAAAEAAAAAAAOABoAAAACAAAAAAAPABoAAAADAAAAAAARABoAAAACAAAAAGARABkAAAAEAAAAAGAQABkAAAAAAAAAAAASABgAAAAAAAMAACANAAMAAAACAAMAAAANAAIAAAACAAIAAAANAAEAAAACAAIAAAANAAAAAAACAAEAAAAGAAMAAAAAAAEAAAAJABoAAAAAAAMAACAKABoAAAAAAAMAACAFABMAAAAAAAEAAAAKABgAAAAAAAEAAAALABgAAAAAAAEAAAA=")
+tile_map_data = PackedByteArray("AAARABcAAAAEAAMAAAARABYAAAAEAAIAAAARABUAAAAEAAIAAAARABQAAAAEAAIAAAARABMAAAAEAAIAAAARABIAAAAEAAIAAAARABEAAAAEAAIAAAARABAAAAAEAAIAAAARAA8AAAAEAAIAAAARAA4AAAAEAAIAAAARAA0AAAAEAAIAAAARAAwAAAAEAAIAAAARAAsAAAAEAAIAAAARAAoAAAAEAAIAAAARAAkAAAAEAAIAAAARAAgAAAAEAAIAAAARAAcAAAAEAAEAAAAQAAcAAAAAAAEAAAAPAAcAAAAAAAEAAAAKAAYAAAACAAAAAAAKAAgAAAACAAAAAAACAAcAAAACAAAAAAALAAYAAAAEAAAAAAALAAgAAAAEAAAAAAADAAcAAAAEAAAAAAABAAgAAAADAAAAAGAMAAcAAAADAAAAAHAMAAkAAAADAAAAAHAMAA0AAAADAAAAAHAMAA4AAAADAAAAAHAMAA8AAAADAAAAAHALABEAAAADAAAAACAMABAAAAAEAAAAAFAMAAwAAAACAAAAAFALABAAAAAAAAAAAAAKABAAAAAAAAAAAAAJABAAAAAAAAAAAAAHABAAAAAAAAAAAAAGABAAAAAAAAAAAAAFABAAAAAAAAAAAAAEABAAAAAAAAAAAAACABEAAAAAAAAAAAAIABEAAAAAAAAAAAADABIAAAAAAAEAAAADABEAAAAAAAMAAAAFAAsAAAACAAMAAGAEAAsAAAACAAIAAGADAAsAAAACAAIAAGACAAsAAAACAAIAAGABAAsAAAACAAIAAGAAAAsAAAACAAIAAGD//wsAAAACAAEAAGALAAcAAAAAAAMAACAKAAcAAAAAAAMAACALAAkAAAAAAAMAACAKAAkAAAAAAAMAACACAAgAAAAAAAMAACADAAgAAAAAAAMAACABABgAAAAAAAEAAAACABgAAAAAAAEAAAADABgAAAAAAAEAAAAEABgAAAAAAAEAAAAEABoAAAAAAAAAAAAGABoAAAACAAAAAAAHABoAAAADAAAAAAAIABoAAAAEAAAAAAALABoAAAACAAAAAAAMABoAAAAEAAAAAAAQABoAAAAEAAAAAAAOABoAAAACAAAAAAAPABoAAAADAAAAAAARABoAAAACAAAAAGARABkAAAAEAAAAAGAQABkAAAAAAAAAAAASABgAAAAAAAMAACANAAMAAAACAAMAAAANAAIAAAACAAIAAAANAAEAAAACAAIAAAANAAAAAAACAAEAAAAGAAMAAAAAAAEAAAAJABoAAAAAAAMAACAKABoAAAAAAAMAACAFABMAAAAAAAEAAAAKABgAAAAAAAEAAAALABgAAAAAAAEAAAALAAUAAAAAAAMAACAKAAUAAAAAAAMAACA=")
 
 [node name="Chute" parent="." index="7" unique_id=109353768 instance=ExtResource("4_d1osm")]
 position = Vector2(2243, 3050)
@@ -74,26 +74,16 @@ script = ExtResource("9_3fa85")
 position = Vector2(1262, 3759.5)
 shape = SubResource("WorldBoundaryShape2D_3qd3g")
 
-[node name="PressurePlate" parent="." index="15" unique_id=1370028829 instance=ExtResource("10_8xl1m")]
-position = Vector2(459, 3131)
-
-[node name="PressurePlate3" parent="." index="16" unique_id=1082041356 instance=ExtResource("10_8xl1m")]
-position = Vector2(1471, 3130)
-
-[node name="LevelTransition" parent="." index="17" unique_id=1571917349 instance=ExtResource("11_bwsuy")]
-position = Vector2(990, 3095)
-target_scene = "res://Level2.tscn"
-
-[node name="MovingPlatform" parent="." index="18" unique_id=92933019 instance=ExtResource("12_nvhjt")]
+[node name="MovingPlatform" parent="." index="15" unique_id=92933019 instance=ExtResource("12_nvhjt")]
 position = Vector2(985, 2671)
 
 [node name="Marker2D" parent="MovingPlatform" index="2" unique_id=496747990]
 position = Vector2(0, 400)
 
-[node name="Pen" parent="." index="19" unique_id=329765511 instance=ExtResource("3_yaehp")]
+[node name="Pen" parent="." index="16" unique_id=329765511 instance=ExtResource("3_yaehp")]
 position = Vector2(831, 407)
 
-[node name="WindDraft2" parent="." index="20" unique_id=1801961295 instance=ExtResource("6_gwx4l")]
+[node name="WindDraft2" parent="." index="17" unique_id=1801961295 instance=ExtResource("6_gwx4l")]
 position = Vector2(1609, 1466)
 direction = 3
 speed = 200.0
@@ -101,29 +91,42 @@ is_on = false
 height = 1800.0
 thickness = 120.0
 
-[node name="PressurePlate2" parent="." index="21" unique_id=197502356 instance=ExtResource("10_8xl1m")]
-position = Vector2(513, 1435)
-
-[node name="MovingPlatform2" parent="." index="22" unique_id=507577701 instance=ExtResource("12_nvhjt")]
+[node name="MovingPlatform2" parent="." index="18" unique_id=507577701 instance=ExtResource("12_nvhjt")]
 position = Vector2(1087, 2141)
 
 [node name="Marker2D" parent="MovingPlatform2" index="2" unique_id=496747990]
 position = Vector2(0, -273)
 
-[node name="LevelTransition2" parent="." index="23" unique_id=1753990366 instance=ExtResource("11_bwsuy")]
+[node name="PressurePlate" parent="Plates" parent_id_path=PackedInt32Array(2059121929) index="0" unique_id=1370028829 instance=ExtResource("10_8xl1m")]
+position = Vector2(459, 3131)
+
+[node name="PressurePlate3" parent="Plates" parent_id_path=PackedInt32Array(2059121929) index="1" unique_id=1082041356 instance=ExtResource("10_8xl1m")]
+position = Vector2(1471, 3130)
+
+[node name="PressurePlate2" parent="Plates" parent_id_path=PackedInt32Array(2059121929) index="2" unique_id=197502356 instance=ExtResource("10_8xl1m")]
+position = Vector2(513, 1435)
+
+[node name="PressurePlate4" parent="Plates" parent_id_path=PackedInt32Array(2059121929) index="3" unique_id=1712155776 instance=ExtResource("10_8xl1m")]
+position = Vector2(1091, 2270)
+
+[node name="LevelTransition2" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="0" unique_id=1571917349 instance=ExtResource("11_bwsuy")]
+position = Vector2(990, 3095)
+target_scene = "res://Level2.tscn"
+
+[node name="LevelTransition3" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="1" unique_id=1753990366 instance=ExtResource("11_bwsuy")]
 position = Vector2(988, 2652)
 
-[node name="LevelTransition3" parent="." index="24" unique_id=1667576410 instance=ExtResource("11_bwsuy")]
+[node name="LevelTransition4" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="2" unique_id=1667576410 instance=ExtResource("11_bwsuy")]
 position = Vector2(1087, 1867)
 
-[node name="LevelTransition4" parent="." index="25" unique_id=1188887125 instance=ExtResource("11_bwsuy")]
+[node name="LevelTransition5" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="3" unique_id=1188887125 instance=ExtResource("11_bwsuy")]
 position = Vector2(1879, 2915)
 scale = Vector2(2, 2)
 hold_required_time = 1.0
 
+[connection signal="pressed_state_changed" from="Plates/PressurePlate" to="MovingPlatform" method="_on_pressure_plate_pressed_state_changed"]
+[connection signal="pressed_state_changed" from="Plates/PressurePlate3" to="MovingPlatform" method="_on_pressure_plate_3_pressed_state_changed"]
+[connection signal="pressed_state_changed" from="Plates/PressurePlate4" to="MovingPlatform2" method="_on_pressure_plate_4_pressed_state_changed"]
+
 [editable path="MovingPlatform"]
 [editable path="MovingPlatform2"]
-
-[connection signal="pressed_state_changed" from="PressurePlate" to="MovingPlatform" method="_on_pressure_plate_pressed_state_changed"]
-[connection signal="pressed_state_changed" from="PressurePlate3" to="MovingPlatform" method="_on_pressure_plate_3_pressed_state_changed"]
-[connection signal="pressed_state_changed" from="PressurePlate2" to="MovingPlatform2" method="_on_pressure_plate_pressed_state_changed"]

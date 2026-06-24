@@ -1,4 +1,4 @@
-[gd_scene format=4 uid="uid://bt3gfge17sbhm"]
+[gd_scene format=3 uid="uid://bt3gfge17sbhm"]
 
 [ext_resource type="Script" uid="uid://dy1ipji7we2fj" path="res://scripts/base_level.gd" id="1_level"]
 [ext_resource type="Script" uid="uid://cfoden2v1tdu7" path="res://scripts/player.gd" id="2_player"]
@@ -126,6 +126,10 @@ script = ExtResource("3_gun")
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1876221026]
 tile_set = SubResource("TileSet_dxoup")
+
+[node name="Plates" type="Node2D" parent="." unique_id=2059121929]
+
+[node name="LevelTransition" type="Node2D" parent="." unique_id=1180949276]
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1795732186]
 

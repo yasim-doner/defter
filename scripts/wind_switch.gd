@@ -1,20 +1,16 @@
 extends Area2D
 
-@export var wind_draft_path: NodePath
+signal toggle_state_changed(new_state: bool)
+
+@export var is_on: bool = true
 @export var prompt_text: String = "Press [E] to Toggle Wind"
 
-var is_on: bool = true
 var wiggle_seed: float = 0.0
 
 func _ready() -> void:
 	# Connect signals
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
-	
-	# Match the initial state of the target wind draft
-	var target = get_node_or_null(wind_draft_path)
-	if target:
-		is_on = target.is_on
 	queue_redraw()
 
 func _process(delta: float) -> void:
@@ -28,9 +24,7 @@ func interact(player: CharacterBody2D) -> void:
 @rpc("any_peer", "call_local", "reliable")
 func sync_toggle() -> void:
 	is_on = not is_on
-	var target = get_node_or_null(wind_draft_path)
-	if target:
-		target.is_on = is_on
+	toggle_state_changed.emit(is_on)
 	queue_redraw()
 
 func _on_body_entered(body: Node2D) -> void:

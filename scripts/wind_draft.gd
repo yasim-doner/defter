@@ -25,12 +25,21 @@ enum WindDirection { UP, DOWN, LEFT, RIGHT }
 		update_wind_draft_shapes()
 		update_wind_draft()
 
+@export var thickness: float = 75.0:
+	set(val):
+		thickness = val
+		update_wind_draft_shapes()
+		update_wind_draft()
+
 func _ready() -> void:
 	update_wind_draft_shapes()
 	update_wind_draft()
 	if not Engine.is_editor_hint():
 		body_entered.connect(_on_body_entered)
 		body_exited.connect(_on_body_exited)
+
+func set_is_on(val: bool) -> void:
+	is_on = val
 
 func update_wind_draft_shapes() -> void:
 	var is_vertical = (direction == WindDirection.UP or direction == WindDirection.DOWN)
@@ -43,8 +52,10 @@ func update_wind_draft_shapes() -> void:
 				col_shape.shape = col_shape.shape.duplicate()
 			if is_vertical:
 				col_shape.shape.size.y = height
+				col_shape.shape.size.x = thickness
 			else:
 				col_shape.shape.size.x = height
+				col_shape.shape.size.y = thickness
 
 func get_wind_direction_vector() -> Vector2:
 	match direction:

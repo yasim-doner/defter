@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="defter"
-run/main_scene="uid://ed0wjc2eqmno"
+run/main_scene="uid://c0lsf0n03gsru"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
 

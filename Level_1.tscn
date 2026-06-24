@@ -123,3 +123,7 @@ hold_required_time = 1.0
 
 [editable path="MovingPlatform"]
 [editable path="MovingPlatform2"]
+
+[connection signal="pressed_state_changed" from="PressurePlate" to="MovingPlatform" method="_on_pressure_plate_pressed_state_changed"]
+[connection signal="pressed_state_changed" from="PressurePlate3" to="MovingPlatform" method="_on_pressure_plate_3_pressed_state_changed"]
+[connection signal="pressed_state_changed" from="PressurePlate2" to="MovingPlatform2" method="_on_pressure_plate_pressed_state_changed"]

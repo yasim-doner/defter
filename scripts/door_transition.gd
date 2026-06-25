@@ -1,6 +1,6 @@
 extends Area2D
 
-@export var target_scene: PackedScene
+@export_file("*.tscn") var target_scene: String = ""
 @export var set_mid_level_1: bool = false
 @export var set_mid_level_2: bool = false
 @export var set_mid_level_3: bool = false
@@ -46,7 +46,7 @@ func _on_body_exited(body: Node2D) -> void:
 
 func _transition_level() -> void:
 	var is_server = not multiplayer or not multiplayer.has_multiplayer_peer() or multiplayer.is_server()
-	if is_server and target_scene:
+	if is_server and target_scene != "":
 		if GameManager:
 			var flags_to_set = []
 			if set_mid_level_1: flags_to_set.append("mid_level_1_done")
@@ -62,6 +62,6 @@ func _transition_level() -> void:
 					GameManager.sync_set_flag(flag, true)
 					
 			if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
-				GameManager.sync_load_level.rpc(target_scene.resource_path)
+				GameManager.sync_load_level.rpc(target_scene)
 			else:
-				GameManager.sync_load_level(target_scene.resource_path)
+				GameManager.sync_load_level(target_scene)

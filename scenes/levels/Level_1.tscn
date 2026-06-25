@@ -6,7 +6,6 @@
 [ext_resource type="PackedScene" path="res://scenes/chute.tscn" id="4_d1osm"]
 [ext_resource type="PackedScene" uid="uid://bq684rocxfa6e" path="res://scenes/enemy_spawner.tscn" id="5_ie7uf"]
 [ext_resource type="PackedScene" uid="uid://ngrwcp3h2mqr" path="res://scenes/wind_draft.tscn" id="6_gwx4l"]
-[ext_resource type="PackedScene" uid="uid://pgjseauvvrl4" path="res://scenes/levels/Challange1/Room1.tscn" id="6_hknnn"]
 [ext_resource type="PackedScene" path="res://scenes/wind_switch.tscn" id="7_fkbji"]
 [ext_resource type="PackedScene" uid="uid://cx6i8d7f2ghk" path="res://scenes/parachute_area.tscn" id="8_6eo5x"]
 [ext_resource type="Script" uid="uid://dr58yoytl621s" path="res://scripts/death_zone.gd" id="9_3fa85"]
@@ -55,7 +54,7 @@ position = Vector2(990, 3095)
 
 [node name="LevelTransition3" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="1" unique_id=1753990366 instance=ExtResource("11_bwsuy")]
 position = Vector2(988, 2652)
-target_scene = ExtResource("6_hknnn")
+target_scene = "res://scenes/levels/Challange1/Room1.tscn"
 
 [node name="LevelTransition4" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="2" unique_id=1667576410 instance=ExtResource("11_bwsuy")]
 position = Vector2(1087, 1867)

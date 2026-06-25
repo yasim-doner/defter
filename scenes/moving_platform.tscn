@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://q7di2rxpwycq" path="res://assets/platform.png" id="2_tex"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_platform"]
-size = Vector2(118, 15)
+size = Vector2(118, 8)
 
 [node name="MovingPlatform" type="AnimatableBody2D" unique_id=92933019]
 script = ExtResource("1_script")

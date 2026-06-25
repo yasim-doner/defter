@@ -1,32 +1,15 @@
-[gd_scene format=4 uid="uid://btl86vj5llnca"]
+[gd_scene format=3 uid="uid://bt3gfge17sbhm"]
 
-[ext_resource type="Script" uid="uid://b05b5i7tkgida" path="res://scripts/Level1.gd" id="1_level"]
-[ext_resource type="Script" uid="uid://cfoden2v1tdu7" path="res://scripts/player.gd" id="2_player"]
-[ext_resource type="Script" uid="uid://s2r02jjojtvt" path="res://scripts/drawn_gun.gd" id="3_gun"]
-[ext_resource type="PackedScene" path="res://scenes/pen.tscn" id="5_pen"]
-[ext_resource type="Texture2D" uid="uid://deiow8v3e8n3a" path="res://assets/Resim (11).jpg" id="7_page1"]
-[ext_resource type="PackedScene" uid="uid://cx6i8d7f2ghk" path="res://scenes/parachute_area.tscn" id="8_parachute"]
-[ext_resource type="PackedScene" path="res://scenes/chute.tscn" id="9_5g1s2"]
-[ext_resource type="PackedScene" uid="uid://bq684rocxfa6e" path="res://scenes/enemy_spawner.tscn" id="9_aiv1b"]
+[ext_resource type="Script" uid="uid://dy1ipji7we2fj" path="res://scripts/base_level.gd" id="1_level"]
 [ext_resource type="Script" uid="uid://c5joh3iurpd3e" path="res://scripts/drawing_canvas.gd" id="9_canvas"]
 [ext_resource type="Texture2D" uid="uid://bwo5j8nkbwfu5" path="res://assets/tileset.png" id="10_1bjei"]
 [ext_resource type="Script" uid="uid://cspuijuj3gddk" path="res://scripts/death_screen.gd" id="10_death"]
-[ext_resource type="PackedScene" uid="uid://ngrwcp3h2mqr" path="res://scenes/wind_draft.tscn" id="12_aiv1b"]
-[ext_resource type="PackedScene" path="res://scenes/wind_switch.tscn" id="13_switch"]
-[ext_resource type="PackedScene" uid="uid://c4n1t8vyu7r05" path="res://scenes/pressure_plate.tscn" id="14_plate"]
-[ext_resource type="Script" uid="uid://dr58yoytl621s" path="res://scripts/death_zone.gd" id="15_3gjqj"]
-[ext_resource type="PackedScene" uid="uid://cb5rvtcy8b172" path="res://scenes/moving_platform.tscn" id="17_na6ls"]
-[ext_resource type="PackedScene" uid="uid://c4n1t8vyu7r06" path="res://scenes/level_transition.tscn" id="18_transition"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
-radius = 8.0
-height = 42.0
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_na6ls"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5g1s2"]
 texture = ExtResource("10_1bjei")
 texture_region_size = Vector2i(128, 128)
 1:0/0 = 0
-1:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-29.301281, -64, -30.072372, 64, -34.69889, 64, -35.469975, -64)
+1:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(0, -59.89296, 0, -64, 64, -64, 64, 0.9330139, 60.252678, 1.2590122, 60.432533, -61.15197)
 2:0/0 = 0
 2:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(64, 31.614548, 64, 64, -64, 64, -64, 53.590508, -44.70717, 32.59684)
 2:0/0/custom_data_0 = true
@@ -39,7 +22,7 @@ texture_region_size = Vector2i(128, 128)
 0:1/0 = 0
 0:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(64, -3.4698868, 64, 1.5421753, -64, 2.698803, -64, -2.3132553)
 1:1/0 = 0
-1:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(2.3132553, -64, 3.4698868, 64, -2.6987991, 64, -2.313263, -64)
+1:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-2.393921, -64, 1.523407, -64, 1.7410316, 1.3057747, -64, 1.7410355, -64, -2.1762924, -2.1762905, -2.393919)
 2:1/0 = 0
 2:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(36.626606, 64, 29.301285, 64, 27.75911, 5.783148, 21.975964, -3.4698906, -7.325321, -13.879555, -20.819332, -5.397606, -30.07237, 9.2530365, -28.915741, 64, -35.855522, 64, -36.626606, 2.698803, -22.747055, -10.795208, -6.9397774, -17.734987, 25.831394, -10.409668, 34.313347, 1.5421734)
 3:1/0 = 0
@@ -64,9 +47,7 @@ tile_size = Vector2i(128, 128)
 physics_layer_0/collision_layer = 1
 custom_data_layer_0/name = "is_spike"
 custom_data_layer_0/type = 1
-sources/0 = SubResource("TileSetAtlasSource_na6ls")
-
-[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_riqys"]
+sources/0 = SubResource("TileSetAtlasSource_5g1s2")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
 bg_color = Color(0.992157, 0.984314, 0.968627, 1)
@@ -104,140 +85,23 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[node name="Level1" type="Node2D" unique_id=1753699881]
+[node name="BaseLevel" type="Node2D" unique_id=1753699881]
 script = ExtResource("1_level")
 
 [node name="Backgrounds" type="Node2D" parent="." unique_id=695623457]
 
-[node name="Page1" type="Sprite2D" parent="Backgrounds" unique_id=2076883316]
-position = Vector2(1249, 1711)
-texture = ExtResource("7_page1")
-
 [node name="Pens" type="Node2D" parent="." unique_id=409736343]
 
-[node name="Pen3" parent="Pens" unique_id=1526827075 instance=ExtResource("5_pen")]
-position = Vector2(575.40405, 3373.7285)
-
-[node name="Pen2" parent="Pens" unique_id=581298130 instance=ExtResource("5_pen")]
-position = Vector2(2071, 912)
-
 [node name="Enemies" type="Node2D" parent="." unique_id=1938417952]
-
-[node name="Player1" type="CharacterBody2D" parent="." unique_id=1013192461]
-position = Vector2(250, 3100)
-script = ExtResource("2_player")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Player1" unique_id=2035187052]
-position = Vector2(0, -21)
-shape = SubResource("CapsuleShape2D_player")
-
-[node name="DrawnGun" type="Node2D" parent="Player1" unique_id=2118961313]
-script = ExtResource("3_gun")
-
-[node name="Player2" type="CharacterBody2D" parent="." unique_id=424325567]
-position = Vector2(400, 3100)
-script = ExtResource("2_player")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Player2" unique_id=371218210]
-position = Vector2(0, -21)
-shape = SubResource("CapsuleShape2D_player")
-
-[node name="DrawnGun" type="Node2D" parent="Player2" unique_id=1756308894]
-script = ExtResource("3_gun")
 
 [node name="Bullets" type="Node2D" parent="." unique_id=1491174582]
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1876221026]
-tile_map_data = PackedByteArray("AAABABgAAAAAAAEAAAACABgAAAAAAAEAAAADABgAAAAAAAEAAAAEABgAAAAAAAEAAAAKABgAAAAAAAEAAAALABgAAAAAAAEAAAAOABoAAAACAAAAAAAPABoAAAADAAAAAAARABUAAAAEAAIAAAARABIAAAAEAAIAAAARABMAAAAEAAIAAAARABQAAAAEAAIAAAARABAAAAAEAAIAAAARABEAAAAEAAIAAAARAA0AAAAEAAIAAAARAA4AAAAEAAIAAAARAA8AAAAEAAIAAAARAAwAAAAEAAIAAAARAAkAAAAEAAIAAAARAAoAAAAEAAIAAAARAAsAAAAEAAIAAAARAAgAAAAEAAIAAAAPAAcAAAAAAAEAAAAQAAcAAAAAAAEAAAAMABoAAAAEAAAAAAALABoAAAACAAAAAAAGABoAAAACAAAAAAAHABoAAAADAAAAAAAIABoAAAAEAAAAAAAQABkAAAAAAAAAAAAQABoAAAAEAAAAAAARABoAAAACAAAAAGARABkAAAAEAAAAAGASABkAAAAAAAMAAAARABYAAAAEAAIAAAARABcAAAAEAAMAAAANAAAAAAACAAEAAAANAAEAAAACAAIAAAANAAIAAAACAAIAAAANAAMAAAACAAMAAAALAAQAAAAAAAAAAAAKAAQAAAAAAAAAAAAJABoAAAAAAAMAACAKABoAAAAAAAMAACAMABsAAAAAAAMAAHAOABsAAAAAAAMAAGARAAcAAAAEAAEAAAAEABoAAAAAAAAAAAAEAAUAAAABAAAAADAKAAYAAAACAAAAAAALAAYAAAAEAAAAAAAMAAcAAAADAAAAAHAGAAMAAAAAAAEAAAALAAcAAAAAAAMAACAKAAcAAAAAAAMAACAEAAsAAAACAAIAAGADAAsAAAACAAIAAGAFAAsAAAACAAMAAGABAAsAAAACAAIAAGACAAsAAAACAAIAAGD//wsAAAACAAEAAGAAAAsAAAACAAIAAGALAAgAAAAEAAAAAAAKAAgAAAACAAAAAAAMAAkAAAADAAAAAHAKAAkAAAAAAAMAACALAAkAAAAAAAMAACABAAgAAAADAAAAAGACAAcAAAACAAAAAAADAAcAAAAEAAAAAAACAAgAAAAAAAMAACADAAgAAAAAAAMAACAFABAAAAAAAAAAAAAGABAAAAAAAAAAAAAEABAAAAAAAAAAAAAHABAAAAAAAAAAAAAJABAAAAAAAAAAAAAMAAwAAAACAAAAAFAMAA0AAAADAAAAAFAMAA4AAAADAAAAAFAMAA8AAAADAAAAAFAMABAAAAADAAAAAFAKABAAAAAAAAAAAAALABAAAAAAAAAAAAALABEAAAADAAAAACAGABEAAAAAAAMAACADABIAAAAAAAEAAAACABEAAAAAAAAAAAADABEAAAAAAAMAAAAIABEAAAAAAAAAAAAEABQAAAAAAAMAACAFABMAAAAAAAEAAAA=")
 tile_set = SubResource("TileSet_dxoup")
 
-[node name="Chute" parent="." unique_id=1557057324 instance=ExtResource("9_5g1s2")]
-position = Vector2(2243, 3053)
-rotation = 1.5707964
-chute_id = "1"
+[node name="Plates" type="Node2D" parent="." unique_id=2059121929]
 
-[node name="Chute2" parent="." unique_id=1907597949 instance=ExtResource("9_5g1s2")]
-position = Vector2(2239, 948)
-rotation = 4.712389
-chute_id = "1"
-
-[node name="EnemySpawner" parent="." unique_id=395964841 instance=ExtResource("9_aiv1b")]
-position = Vector2(1728.0001, 119)
-spawn_rate = 1.0
-max_enemies = 10
-patrol_range = 0.0
-speed = 50.0
-
-[node name="WindDraft" parent="." unique_id=1727304534 instance=ExtResource("12_aiv1b")]
-position = Vector2(1726, 2022)
-speed = 500.0
-is_on = false
-height = 3150.0
-
-[node name="WindSwitch" parent="." unique_id=20261915 instance=ExtResource("13_switch")]
-position = Vector2(1970, 899)
-is_on = false
-
-[node name="ParachuteArea" parent="." unique_id=1983574243 instance=ExtResource("8_parachute")]
-position = Vector2(1366, 3104)
-
-[node name="ParachuteArea2" parent="." unique_id=1721257749 instance=ExtResource("8_parachute")]
-position = Vector2(1356, 3405)
-parachute_duration = 5.0
-
-[node name="Area2D" type="Area2D" parent="." unique_id=1444110185]
-script = ExtResource("15_3gjqj")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=831139359]
-position = Vector2(1262, 3759.5)
-shape = SubResource("WorldBoundaryShape2D_riqys")
-
-[node name="PressurePlate" parent="." unique_id=1613045869 instance=ExtResource("14_plate")]
-position = Vector2(459, 3134)
-
-[node name="PressurePlate3" parent="." unique_id=997302990 instance=ExtResource("14_plate")]
-position = Vector2(1471, 3133)
-
-[node name="LevelTransition" parent="." unique_id=997302991 instance=ExtResource("18_transition")]
-position = Vector2(990, 3098)
-target_scene = "res://Level2.tscn"
-
-[node name="MovingPlatform" parent="." unique_id=1699188921 instance=ExtResource("17_na6ls")]
-position = Vector2(985, 2674)
-
-[node name="Marker2D" parent="MovingPlatform" index="2" unique_id=496747990]
-position = Vector2(0, 400)
-
-[node name="Pen" parent="." unique_id=119684580 instance=ExtResource("5_pen")]
-position = Vector2(831, 410)
-
-[node name="WindDraft2" parent="." unique_id=869097853 instance=ExtResource("12_aiv1b")]
-position = Vector2(1609, 1469)
-direction = 3
-speed = 200.0
-is_on = false
-height = 1800.0
-thickness = 120.0
-
-[node name="PressurePlate2" parent="." unique_id=1090638966 instance=ExtResource("14_plate")]
-position = Vector2(513, 1438)
-
-[node name="MovingPlatform2" parent="." unique_id=92933019 instance=ExtResource("17_na6ls")]
-position = Vector2(1087, 2144)
-
-[node name="Marker2D" parent="MovingPlatform2" index="2" unique_id=496747990]
-position = Vector2(0, -273)
-
-[node name="LevelTransition2" parent="." unique_id=1313894272 instance=ExtResource("18_transition")]
-position = Vector2(988, 2655)
-
-[node name="LevelTransition3" parent="." unique_id=2001118844 instance=ExtResource("18_transition")]
-position = Vector2(1087, 1870)
-
-[node name="LevelTransition4" parent="." unique_id=1775597861 instance=ExtResource("18_transition")]
-position = Vector2(1879, 2918)
-scale = Vector2(2, 2)
-hold_required_time = 1.0
+[node name="LevelTransition" type="Node2D" parent="." unique_id=1180949276]
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1795732186]
 
@@ -401,11 +265,3 @@ theme_override_font_sizes/font_size = 20
 text = "Press [E] to Glide"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[connection signal="toggle_state_changed" from="WindSwitch" to="WindDraft" method="set_is_on"]
-[connection signal="pressed_state_changed" from="PressurePlate" to="MovingPlatform" method="_on_pressure_plate_pressed_state_changed"]
-[connection signal="pressed_state_changed" from="PressurePlate3" to="MovingPlatform" method="_on_pressure_plate_3_pressed_state_changed"]
-[connection signal="pressed_state_changed" from="PressurePlate2" to="WindDraft2" method="set_is_on"]
-
-[editable path="MovingPlatform"]
-[editable path="MovingPlatform2"]

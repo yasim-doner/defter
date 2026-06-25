@@ -152,3 +152,20 @@ func _on_body_exited(body: Node2D) -> void:
 	elif body.has_method("die_by_bullet"):
 		if "active_wind_drafts" in body:
 			body.active_wind_drafts.erase(self)
+
+
+var _prev_is_on: bool = true
+
+func _on_pressure_plate_2_pressed_state_changed(is_pressed: bool) -> void:
+	if is_pressed:
+		# Store current state and toggle
+		_prev_is_on = is_on
+		set_is_on(!is_on)
+	else:
+		# Restore previous state when released
+		set_is_on(_prev_is_on)
+
+
+func _on_wind_switch_toggle_state_changed(new_state: bool) -> void:
+	_prev_is_on = new_state
+	set_is_on(new_state)

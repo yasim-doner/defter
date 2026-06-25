@@ -1,23 +1,26 @@
 [gd_scene format=4 uid="uid://ed0wjc2eqmno"]
 
-[ext_resource type="PackedScene" uid="uid://bt3gfge17sbhm" path="res://scenes/base_level.tscn" id="1_ar1si"]
+[ext_resource type="PackedScene" uid="uid://bt3gfge17sbhm" path="res://scenes/levels/base_level.tscn" id="1_ar1si"]
 [ext_resource type="Texture2D" uid="uid://deiow8v3e8n3a" path="res://assets/Resim (11).jpg" id="2_6fba8"]
 [ext_resource type="PackedScene" path="res://scenes/pen.tscn" id="3_yaehp"]
 [ext_resource type="PackedScene" path="res://scenes/chute.tscn" id="4_d1osm"]
 [ext_resource type="PackedScene" uid="uid://bq684rocxfa6e" path="res://scenes/enemy_spawner.tscn" id="5_ie7uf"]
 [ext_resource type="PackedScene" uid="uid://ngrwcp3h2mqr" path="res://scenes/wind_draft.tscn" id="6_gwx4l"]
+[ext_resource type="PackedScene" uid="uid://pgjseauvvrl4" path="res://scenes/levels/Challange1/Room1.tscn" id="6_hknnn"]
 [ext_resource type="PackedScene" path="res://scenes/wind_switch.tscn" id="7_fkbji"]
 [ext_resource type="PackedScene" uid="uid://cx6i8d7f2ghk" path="res://scenes/parachute_area.tscn" id="8_6eo5x"]
 [ext_resource type="Script" uid="uid://dr58yoytl621s" path="res://scripts/death_zone.gd" id="9_3fa85"]
 [ext_resource type="PackedScene" uid="uid://c4n1t8vyu7r05" path="res://scenes/pressure_plate.tscn" id="10_8xl1m"]
 [ext_resource type="PackedScene" uid="uid://c4n1t8vyu7r06" path="res://scenes/level_transition.tscn" id="11_bwsuy"]
 [ext_resource type="PackedScene" uid="uid://cb5rvtcy8b172" path="res://scenes/moving_platform.tscn" id="12_nvhjt"]
+[ext_resource type="PackedScene" uid="uid://nx8y3sgypjyu" path="res://scenes/player.tscn" id="13_sha1w"]
+[ext_resource type="PackedScene" uid="uid://dxb0uquv6vw7p" path="res://scenes/checkpoint.tscn" id="15_p3uqr"]
+[ext_resource type="PackedScene" uid="uid://b7s5gvyrxco03" path="res://scenes/letter.tscn" id="16_vqsrt"]
+[ext_resource type="PackedScene" uid="uid://df7v1naxj2qg" path="res://scenes/flag_enabler.tscn" id="17_nd8jy"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_3qd3g"]
 
 [node name="Level_1" unique_id=1753699881 instance=ExtResource("1_ar1si")]
-spawn_p1 = Vector2(250, 3100)
-spawn_p2 = Vector2(400, 3100)
 
 [node name="Page1" type="Sprite2D" parent="Backgrounds" parent_id_path=PackedInt32Array(695623457) index="0" unique_id=2032782587]
 position = Vector2(1249, 1711)
@@ -29,8 +32,38 @@ position = Vector2(575.40405, 3373.7285)
 [node name="Pen2" parent="Pens" parent_id_path=PackedInt32Array(409736343) index="1" unique_id=645507101 instance=ExtResource("3_yaehp")]
 position = Vector2(2071, 912)
 
-[node name="TileMapLayer" parent="." index="6" unique_id=1876221026]
-tile_map_data = PackedByteArray("AAARABcAAAAEAAMAAAARABYAAAAEAAIAAAARABUAAAAEAAIAAAARABQAAAAEAAIAAAARABMAAAAEAAIAAAARABIAAAAEAAIAAAARABEAAAAEAAIAAAARABAAAAAEAAIAAAARAA8AAAAEAAIAAAARAA4AAAAEAAIAAAARAA0AAAAEAAIAAAARAAwAAAAEAAIAAAARAAsAAAAEAAIAAAARAAoAAAAEAAIAAAARAAkAAAAEAAIAAAARAAgAAAAEAAIAAAARAAcAAAAEAAEAAAAQAAcAAAAAAAEAAAAPAAcAAAAAAAEAAAAKAAYAAAACAAAAAAAKAAgAAAACAAAAAAACAAcAAAACAAAAAAALAAYAAAAEAAAAAAALAAgAAAAEAAAAAAADAAcAAAAEAAAAAAABAAgAAAADAAAAAGAMAAcAAAADAAAAAHAMAAkAAAADAAAAAHAMAA0AAAADAAAAAHAMAA4AAAADAAAAAHAMAA8AAAADAAAAAHALABEAAAADAAAAACAMABAAAAAEAAAAAFAMAAwAAAACAAAAAFALABAAAAAAAAAAAAAKABAAAAAAAAAAAAAJABAAAAAAAAAAAAAHABAAAAAAAAAAAAAGABAAAAAAAAAAAAAFABAAAAAAAAAAAAAEABAAAAAAAAAAAAACABEAAAAAAAAAAAAIABEAAAAAAAAAAAADABIAAAAAAAEAAAADABEAAAAAAAMAAAAFAAsAAAACAAMAAGAEAAsAAAACAAIAAGADAAsAAAACAAIAAGACAAsAAAACAAIAAGABAAsAAAACAAIAAGAAAAsAAAACAAIAAGD//wsAAAACAAEAAGALAAcAAAAAAAMAACAKAAcAAAAAAAMAACALAAkAAAAAAAMAACAKAAkAAAAAAAMAACACAAgAAAAAAAMAACADAAgAAAAAAAMAACABABgAAAAAAAEAAAACABgAAAAAAAEAAAADABgAAAAAAAEAAAAEABgAAAAAAAEAAAAEABoAAAAAAAAAAAAGABoAAAACAAAAAAAHABoAAAADAAAAAAAIABoAAAAEAAAAAAALABoAAAACAAAAAAAMABoAAAAEAAAAAAAQABoAAAAEAAAAAAAOABoAAAACAAAAAAAPABoAAAADAAAAAAARABoAAAACAAAAAGARABkAAAAEAAAAAGAQABkAAAAAAAAAAAASABgAAAAAAAMAACANAAMAAAACAAMAAAANAAIAAAACAAIAAAANAAEAAAACAAIAAAANAAAAAAACAAEAAAAGAAMAAAAAAAEAAAAJABoAAAAAAAMAACAKABoAAAAAAAMAACAFABMAAAAAAAEAAAAKABgAAAAAAAEAAAALABgAAAAAAAEAAAALAAUAAAAAAAMAACAKAAUAAAAAAAMAACA=")
+[node name="Pen" parent="Pens" parent_id_path=PackedInt32Array(409736343) index="2" unique_id=884406674 instance=ExtResource("3_yaehp")]
+position = Vector2(1025, 545)
+
+[node name="TileMapLayer" parent="." index="4" unique_id=1876221026]
+tile_map_data = PackedByteArray("AAARABcAAAAEAAMAAAARABYAAAAEAAIAAAARABUAAAAEAAIAAAARABQAAAAEAAIAAAARABMAAAAEAAIAAAARABIAAAAEAAIAAAARABEAAAAEAAIAAAARABAAAAAEAAIAAAARAA8AAAAEAAIAAAARAA4AAAAEAAIAAAARAA0AAAAEAAIAAAARAAwAAAAEAAIAAAARAAsAAAAEAAIAAAARAAoAAAAEAAIAAAARAAkAAAAEAAIAAAARAAgAAAAEAAIAAAARAAcAAAAEAAEAAAAQAAcAAAAAAAEAAAAPAAcAAAAAAAEAAAAMAA0AAAADAAAAAHAMAA4AAAADAAAAAHAMAA8AAAADAAAAAHALABEAAAADAAAAACAMABAAAAAEAAAAAFAMAAwAAAACAAAAAFALABAAAAAAAAAAAAAKABAAAAAAAAAAAAAJABAAAAAAAAAAAAAHABAAAAAAAAAAAAACABEAAAAAAAAAAAAIABEAAAAAAAAAAAADABEAAAAAAAMAAAAFAAsAAAACAAMAAGAEAAsAAAACAAIAAGADAAsAAAACAAIAAGACAAsAAAACAAIAAGABAAsAAAACAAIAAGAAAAsAAAACAAIAAGD//wsAAAACAAEAAGABABgAAAAAAAEAAAACABgAAAAAAAEAAAADABgAAAAAAAEAAAAEABgAAAAAAAEAAAAEABoAAAAAAAAAAAAGABoAAAACAAAAAAAHABoAAAADAAAAAAAIABoAAAAEAAAAAAALABoAAAACAAAAAAAMABoAAAAEAAAAAAAQABoAAAAEAAAAAAAOABoAAAACAAAAAAAPABoAAAADAAAAAAARABoAAAACAAAAAGARABkAAAAEAAAAAGAQABkAAAAAAAAAAAASABgAAAAAAAMAACANAAMAAAACAAMAAAANAAIAAAACAAIAAAANAAEAAAACAAIAAAANAAAAAAACAAEAAAAJABoAAAAAAAMAACAKABoAAAAAAAMAACAKABgAAAAAAAEAAAALABgAAAAAAAEAAAAFABQAAAAAAAIAAAADABMAAAAAAAEAAAAEABIAAAAAAAEAAAACAAUAAAAAAAAAAAADAAUAAAAAAAAAAAAGAAUAAAAAAAAAAAAHAAUAAAAAAAAAAAAKAAUAAAAAAAAAAAALAAUAAAAAAAAAAAAAAAYAAAACAAAAAFAAAAcAAAADAAAAAFABAAcAAAADAAAAAEABAAgAAAADAAAAAEAIAAQAAAABAAEAAAAJAAYAAAAAAAIAAAAHAAQAAAABAAEAABAGABEAAAAAAAAAAAAEABAAAAAAAAAAAAAFABAAAAAAAAAAAAAGABAAAAAAAAAAAAA=")
+
+[node name="PressurePlate" parent="Plates" parent_id_path=PackedInt32Array(2059121929) index="0" unique_id=1370028829 instance=ExtResource("10_8xl1m")]
+position = Vector2(459, 3131)
+
+[node name="PressurePlate3" parent="Plates" parent_id_path=PackedInt32Array(2059121929) index="1" unique_id=1082041356 instance=ExtResource("10_8xl1m")]
+position = Vector2(1471, 3130)
+
+[node name="PressurePlate2" parent="Plates" parent_id_path=PackedInt32Array(2059121929) index="2" unique_id=197502356 instance=ExtResource("10_8xl1m")]
+position = Vector2(513, 1435)
+
+[node name="PressurePlate4" parent="Plates" parent_id_path=PackedInt32Array(2059121929) index="3" unique_id=1712155776 instance=ExtResource("10_8xl1m")]
+position = Vector2(1091, 2270)
+
+[node name="LevelTransition2" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="0" unique_id=1571917349 instance=ExtResource("11_bwsuy")]
+position = Vector2(990, 3095)
+
+[node name="LevelTransition3" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="1" unique_id=1753990366 instance=ExtResource("11_bwsuy")]
+position = Vector2(988, 2652)
+target_scene = ExtResource("6_hknnn")
+
+[node name="LevelTransition4" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="2" unique_id=1667576410 instance=ExtResource("11_bwsuy")]
+position = Vector2(1087, 1867)
+
+[node name="LevelTransition5" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="3" unique_id=1188887125 instance=ExtResource("11_bwsuy")]
+position = Vector2(1879, 2915)
+scale = Vector2(2, 2)
+hold_required_time = 1.0
 
 [node name="Chute" parent="." index="7" unique_id=109353768 instance=ExtResource("4_d1osm")]
 position = Vector2(2243, 3050)
@@ -80,10 +113,7 @@ position = Vector2(985, 2671)
 [node name="Marker2D" parent="MovingPlatform" index="2" unique_id=496747990]
 position = Vector2(0, 400)
 
-[node name="Pen" parent="." index="16" unique_id=329765511 instance=ExtResource("3_yaehp")]
-position = Vector2(831, 407)
-
-[node name="WindDraft2" parent="." index="17" unique_id=1801961295 instance=ExtResource("6_gwx4l")]
+[node name="WindDraft2" parent="." index="16" unique_id=1801961295 instance=ExtResource("6_gwx4l")]
 position = Vector2(1609, 1466)
 direction = 3
 speed = 200.0
@@ -91,42 +121,41 @@ is_on = false
 height = 1800.0
 thickness = 120.0
 
-[node name="MovingPlatform2" parent="." index="18" unique_id=507577701 instance=ExtResource("12_nvhjt")]
+[node name="MovingPlatform2" parent="." index="17" unique_id=507577701 instance=ExtResource("12_nvhjt")]
 position = Vector2(1087, 2141)
 
 [node name="Marker2D" parent="MovingPlatform2" index="2" unique_id=496747990]
 position = Vector2(0, -273)
 
-[node name="PressurePlate" parent="Plates" parent_id_path=PackedInt32Array(2059121929) index="0" unique_id=1370028829 instance=ExtResource("10_8xl1m")]
-position = Vector2(459, 3131)
+[node name="Player" parent="." index="18" unique_id=76879148 instance=ExtResource("13_sha1w")]
+position = Vector2(371, 3112)
 
-[node name="PressurePlate3" parent="Plates" parent_id_path=PackedInt32Array(2059121929) index="1" unique_id=1082041356 instance=ExtResource("10_8xl1m")]
-position = Vector2(1471, 3130)
+[node name="Player2" parent="." index="19" unique_id=253850836 instance=ExtResource("13_sha1w")]
+position = Vector2(293, 3120)
 
-[node name="PressurePlate2" parent="Plates" parent_id_path=PackedInt32Array(2059121929) index="2" unique_id=197502356 instance=ExtResource("10_8xl1m")]
-position = Vector2(513, 1435)
+[node name="Checkpoint" parent="." index="20" unique_id=1616908021 instance=ExtResource("15_p3uqr")]
+position = Vector2(1473, 670)
 
-[node name="PressurePlate4" parent="Plates" parent_id_path=PackedInt32Array(2059121929) index="3" unique_id=1712155776 instance=ExtResource("10_8xl1m")]
-position = Vector2(1091, 2270)
+[node name="Letter" parent="." index="21" unique_id=668434214 instance=ExtResource("16_vqsrt")]
+position = Vector2(1272, 2075)
+mass = 2.0
+bounciness = 0.2
 
-[node name="LevelTransition2" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="0" unique_id=1571917349 instance=ExtResource("11_bwsuy")]
-position = Vector2(990, 3095)
-target_scene = "res://Level2.tscn"
+[node name="FlagEnabler" parent="Letter" index="2" unique_id=1680332299 instance=ExtResource("17_nd8jy")]
+require_mid_level_1 = true
 
-[node name="LevelTransition3" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="1" unique_id=1753990366 instance=ExtResource("11_bwsuy")]
-position = Vector2(988, 2652)
+[node name="UI" parent="." index="22" unique_id=1795732186]
+visible = false
 
-[node name="LevelTransition4" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="2" unique_id=1667576410 instance=ExtResource("11_bwsuy")]
-position = Vector2(1087, 1867)
-
-[node name="LevelTransition5" parent="LevelTransition" parent_id_path=PackedInt32Array(1180949276) index="3" unique_id=1188887125 instance=ExtResource("11_bwsuy")]
-position = Vector2(1879, 2915)
-scale = Vector2(2, 2)
-hold_required_time = 1.0
+[node name="Letter2" parent="." index="23" unique_id=1088124777 instance=ExtResource("16_vqsrt")]
+position = Vector2(549, 3071)
 
 [connection signal="pressed_state_changed" from="Plates/PressurePlate" to="MovingPlatform" method="_on_pressure_plate_pressed_state_changed"]
 [connection signal="pressed_state_changed" from="Plates/PressurePlate3" to="MovingPlatform" method="_on_pressure_plate_3_pressed_state_changed"]
+[connection signal="pressed_state_changed" from="Plates/PressurePlate2" to="WindDraft2" method="_on_pressure_plate_2_pressed_state_changed"]
 [connection signal="pressed_state_changed" from="Plates/PressurePlate4" to="MovingPlatform2" method="_on_pressure_plate_4_pressed_state_changed"]
+[connection signal="toggle_state_changed" from="WindSwitch" to="WindDraft" method="_on_wind_switch_toggle_state_changed"]
+[connection signal="toggle_state_changed" from="WindSwitch" to="WindDraft2" method="_on_wind_switch_toggle_state_changed"]
 
 [editable path="MovingPlatform"]
 [editable path="MovingPlatform2"]

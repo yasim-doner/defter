@@ -1,11 +1,9 @@
 extends Node2D
 class_name BaseLevel
 
-@export var spawn_p1: Vector2 = Vector2(250, 400)
-@export var spawn_p2: Vector2 = Vector2(400, 400)
 @export var fall_limit: float = 3550.0
 
-@onready var player1 = $Player1
+@onready var player1 = $Player
 @onready var player2 = $Player2
 @onready var drawing_canvas = $UI/DrawingCanvas
 @onready var death_screen = $UI/DeathScreen
@@ -21,13 +19,15 @@ func _ready() -> void:
 	player1.setup_camera()
 	player2.setup_camera()
 	
-	# Assign level-specific spawn positions to player scripts
-	player1.spawn_position = spawn_p1
-	player2.spawn_position = spawn_p2
+	# Apply checkpoint if active
+	if GameManager.checkpoint_active:
+		player1.position = GameManager.checkpoint_p1_pos
+		player2.position = GameManager.checkpoint_p2_pos
+		player1.spawn_position = GameManager.checkpoint_p1_pos
+		player2.spawn_position = GameManager.checkpoint_p2_pos
 	
-	# Position players at starts
-	player1.position = spawn_p1
-	player2.position = spawn_p2
+	# Ensure UI is visible
+	$UI.show()
 	
 	# Hide overlay screens
 	death_screen.hide()
@@ -65,18 +65,18 @@ func _process(_delta: float) -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func sync_pen_collected(by_player: String, pen_path: NodePath) -> void:
-	GameManager.sync_pause(true)
-	drawing_player_name = by_player
-	
 	# Delete the pen node on all peers
 	if has_node(pen_path):
 		get_node(pen_path).queue_free()
-		
-	# Open drawing screen locally ONLY on the client who touched the pen
-	var is_host = not multiplayer or not multiplayer.multiplayer_peer or multiplayer.is_server()
-	var local_player_node_name = "Player1" if is_host else "Player2"
-	if by_player == local_player_node_name:
-		drawing_canvas.start_drawing()
+
+	# Pause locally for the player who collected the pen and open drawing UI
+	if has_node(by_player):
+		var player_node = get_node(by_player)
+		if player_node.has_method("is_local") and player_node.is_local():
+			GameManager.sync_pause(true)
+			drawing_canvas.start_drawing()
+	# Record which player is drawing
+	drawing_player_name = by_player
 
 func _on_drawing_finished(lines: Array) -> void:
 	var is_host = not multiplayer or not multiplayer.multiplayer_peer or multiplayer.is_server()

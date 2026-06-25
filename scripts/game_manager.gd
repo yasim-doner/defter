@@ -7,9 +7,21 @@ var is_reloading: bool = false
 var player1_weapon_lines: Array = []
 var player2_weapon_lines: Array = []
 
+var checkpoint_active: bool = false
+var checkpoint_p1_pos: Vector2 = Vector2.ZERO
+var checkpoint_p2_pos: Vector2 = Vector2.ZERO
+
+var level_flags: Dictionary = {
+	"mid_level_1_done": false,
+	"mid_level_2_done": false,
+	"mid_level_3_done": false,
+	"mid_level_4_done": false,
+	"mid_level_5_done": false
+}
+
 var levels: Array[String] = [
-	"res://Level_1.tscn",
-	"res://Level2.tscn"
+	"res://scenes/levels/Level_1.tscn",
+	"res://scenes/levels/Level2.tscn"
 ]
 
 func _ready() -> void:
@@ -75,8 +87,13 @@ func get_next_level() -> String:
 	return ""
 
 @rpc("any_peer", "call_local", "reliable")
+func sync_set_flag(flag_name: String, value: bool) -> void:
+	level_flags[flag_name] = value
+
+@rpc("any_peer", "call_local", "reliable")
 func sync_load_level(level_path: String) -> void:
 	is_game_paused = false
+	checkpoint_active = false
 	get_tree().change_scene_to_file(level_path)
 
 func load_next_level() -> void:

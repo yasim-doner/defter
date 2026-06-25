@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://df7v1naxj2qg"]
+
+[ext_resource type="Script" path="res://scripts/flag_enabler.gd" id="1_script"]
+
+[node name="FlagEnabler" type="Node"]
+script = ExtResource("1_script")

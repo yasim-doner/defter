@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://pgjseauvvrl4"]
+
+[ext_resource type="PackedScene" uid="uid://bt3gfge17sbhm" path="res://scenes/levels/base_level.tscn" id="1_443lr"]
+[ext_resource type="PackedScene" uid="uid://nx8y3sgypjyu" path="res://scenes/player.tscn" id="2_5gsns"]
+[ext_resource type="PackedScene" uid="uid://cxn1t8vyu7r07" path="res://scenes/door_transition.tscn" id="3_odbp1"]
+[ext_resource type="PackedScene" uid="uid://ed0wjc2eqmno" path="res://scenes/levels/Level_1.tscn" id="4_ul1t0"]
+
+[node name="Room1" unique_id=1753699881 instance=ExtResource("1_443lr")]
+
+[node name="TileMapLayer" parent="." index="4" unique_id=1876221026]
+tile_map_data = PackedByteArray(0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="UI" parent="." index="7" unique_id=1795732186]
+visible = false
+
+[node name="Player" parent="." index="8" unique_id=1536302746 instance=ExtResource("2_5gsns")]
+position = Vector2(200, 365)
+
+[node name="Player2" parent="." index="9" unique_id=1730101742 instance=ExtResource("2_5gsns")]
+position = Vector2(274, 364)
+
+[node name="DoorTransition" parent="." index="10" unique_id=308199455 instance=ExtResource("3_odbp1")]
+position = Vector2(430, 383)
+target_scene = ExtResource("4_ul1t0")
+set_mid_level_1 = true

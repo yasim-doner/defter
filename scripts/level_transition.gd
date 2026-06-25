@@ -1,6 +1,6 @@
 extends Area2D
 
-@export var target_scene: String = ""
+@export var target_scene: PackedScene
 @export var hold_required_time: float = 2.0
 
 var players_inside: Array = []
@@ -61,7 +61,7 @@ func _process(delta: float) -> void:
 
 	# Server check for level transition trigger
 	var is_server = not multiplayer or not multiplayer.has_multiplayer_peer() or multiplayer.is_server()
-	if is_server and target_scene != "":
+	if is_server and target_scene:
 		var all_players = get_tree().get_nodes_in_group("players")
 		if not all_players.is_empty():
 			var all_ready = true
@@ -79,9 +79,9 @@ func _process(delta: float) -> void:
 						
 				if GameManager:
 					if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
-						GameManager.sync_load_level.rpc(target_scene)
+						GameManager.sync_load_level.rpc(target_scene.resource_path)
 					else:
-						GameManager.sync_load_level(target_scene)
+						GameManager.sync_load_level(target_scene.resource_path)
 
 @rpc("any_peer", "call_local", "reliable")
 func sync_progress(player_name: String, progress_val: float) -> void:

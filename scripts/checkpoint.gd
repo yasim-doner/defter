@@ -20,7 +20,7 @@ func _on_body_entered(body: Node2D) -> void:
 		if players_inside.size() >= total_players and total_players > 0:
 			activate_checkpoint()
 
-func _on_body_exited(body: Node2D) -> void:
+func _on_body_exited(_body: Node2D) -> void:
 	pass # Do not decrease the counter on exit, it resets on death when scene reloads
 
 func activate_checkpoint() -> void:

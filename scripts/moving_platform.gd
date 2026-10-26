@@ -37,13 +37,13 @@ func _update_movement_state() -> void:
 	moving_to_target = any_pressed
 
 
-func _on_pressure_plate_pressed_state_changed(is_pressed: bool) -> void:
+func _on_pressure_plate_pressed_state_changed(_is_pressed: bool) -> void:
 	_update_movement_state()
 
 
-func _on_pressure_plate_3_pressed_state_changed(is_pressed: bool) -> void:
+func _on_pressure_plate_3_pressed_state_changed(_is_pressed: bool) -> void:
 	_update_movement_state()
 
 
-func _on_pressure_plate_4_pressed_state_changed(is_pressed: bool) -> void:
+func _on_pressure_plate_4_pressed_state_changed(_is_pressed: bool) -> void:
 	_update_movement_state()

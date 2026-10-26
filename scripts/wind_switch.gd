@@ -17,7 +17,7 @@ func _process(delta: float) -> void:
 	wiggle_seed += delta
 	queue_redraw()
 
-func interact(player: CharacterBody2D) -> void:
+func interact(_player: CharacterBody2D) -> void:
 	# Trigger the synchronized network RPC
 	sync_toggle.rpc()
 

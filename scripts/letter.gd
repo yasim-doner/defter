@@ -17,6 +17,9 @@ func is_letter() -> bool:
 	return true
 
 func _ready() -> void:
+	if is_queued_for_deletion():
+		set_physics_process(false)
+		return
 	# Add to group so they can be easily found if needed
 	add_to_group("letters")
 	
@@ -70,6 +73,8 @@ func sync_texture(path: String) -> void:
 	_set_texture(path)
 
 func _physics_process(delta: float) -> void:
+	if is_queued_for_deletion():
+		return
 	# Cooldown timer
 	if teleport_cooldown > 0.0:
 		teleport_cooldown -= delta
@@ -228,13 +233,13 @@ func _start_dragging(player_node: CharacterBody2D, player_id: int) -> void:
 	else:
 		sync_letter_state(global_position, Vector2.ZERO, rotation, player_id, State.DRAGGING, offset)
 
-func _start_carrying(player_node: CharacterBody2D, player_id: int) -> void:
+func _start_carrying(_player_node: CharacterBody2D, player_id: int) -> void:
 	if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
 		sync_letter_state.rpc(global_position, Vector2.ZERO, rotation, player_id, State.CARRYING, drag_offset_x)
 	else:
 		sync_letter_state(global_position, Vector2.ZERO, rotation, player_id, State.CARRYING, drag_offset_x)
 
-func _stop_carrying(player_node: CharacterBody2D, exit_velocity: Vector2) -> void:
+func _stop_carrying(_player_node: CharacterBody2D, exit_velocity: Vector2) -> void:
 	if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
 		sync_letter_state.rpc(global_position, exit_velocity, rotation, 0, State.IDLE, drag_offset_x)
 	else:
@@ -248,7 +253,7 @@ func sync_letter_state(pos: Vector2, vel: Vector2, rot: float, carried_by: int, 
 	velocity = vel
 	rotation = rot
 	carried_by_id = carried_by
-	state = new_state
+	state = new_state as State
 	drag_offset_x = drag_offset
 	
 	# Update player carry variables on clients

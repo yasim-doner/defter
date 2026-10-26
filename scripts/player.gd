@@ -51,7 +51,6 @@ var use_frames: bool = false
 var _anim: String = ""
 var _lean: float = 0.0
 var _vis_scale: Vector2 = Vector2.ONE
-var _idle_t: float = 0.0
 var _jump_phase: String = ""   # "", launch, rise, tofall, fall, land
 var _was_on_floor: bool = true
 var _run_trans: bool = false   # playing the idle->run start transition
@@ -341,7 +340,7 @@ func _input(event: InputEvent) -> void:
 					sync_shoot.rpc(spawn_pos, dir)
 
 @rpc("any_peer", "call_local", "reliable")
-func sync_activate_parachute_path(parachute_path: NodePath, duration: float = 10.0) -> void:
+func sync_activate_parachute_path(_parachute_path: NodePath, duration: float = 10.0) -> void:
 	is_parachute_active = true
 	if not has_node("Parachute"):
 		var parachute_scene = load("res://scenes/parachute.tscn")
@@ -421,7 +420,7 @@ func sync_catch_parachute(parachute_path: NodePath) -> void:
 	queue_redraw()
 
 @rpc("any_peer", "call_local", "reliable")
-func sync_activate_parachute(duration: float = 10.0) -> void:
+func sync_activate_parachute(_duration: float = 10.0) -> void:
 	pass
 
 @rpc("any_peer", "call_local", "reliable")
@@ -523,7 +522,7 @@ func _physics_process(delta: float) -> void:
 		fall_start_y = global_position.y # Reset fall height during noclip flight
 		
 		# Send updated local player state to the remote peer
-		var gun_rot = 0.0
+		var noclip_gun_rot = 0.0
 		if has_node("DrawnGun") and $DrawnGun.lines.size() > 0:
 			var mouse_pos = get_global_mouse_position()
 			facing_right = mouse_pos.x > global_position.x
@@ -539,16 +538,16 @@ func _physics_process(delta: float) -> void:
 			else:
 				$DrawnGun.scale = Vector2(1.0, -1.0)
 			$DrawnGun.rotation = target_angle
-			gun_rot = target_angle
+			noclip_gun_rot = target_angle
 			
 		if multiplayer and multiplayer.has_multiplayer_peer() and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
-			sync_state.rpc(position, velocity, facing_right, gun_rot)
+			sync_state.rpc(position, velocity, facing_right, noclip_gun_rot)
 			
 		# Drive visual rig and redraw
-		var holding: bool = has_node("DrawnGun") and $DrawnGun.lines.size() > 0
-		var aim: float = gun_rot if holding else NAN
-		var face: float = 1.0 if facing_right else -1.0
-		_drive_visual(delta, velocity, true, face, holding, aim)
+		var noclip_holding: bool = has_node("DrawnGun") and $DrawnGun.lines.size() > 0
+		var noclip_aim: float = noclip_gun_rot if noclip_holding else NAN
+		var noclip_face: float = 1.0 if facing_right else -1.0
+		_drive_visual(delta, velocity, true, noclip_face, noclip_holding, noclip_aim)
 		return
 
 	if is_first_physics_frame:
@@ -853,7 +852,7 @@ func _on_sprite_anim_finished() -> void:
 
 # Drive the AnimatedSprite2D: jump FSM + ground states, speed scaling, and the
 # momentum lean / squash-stretch feel layer.
-func _update_sprite(delta: float, vel: Vector2, on_floor: bool, face: float, holding: bool) -> void:
+func _update_sprite(delta: float, vel: Vector2, on_floor: bool, face: float, _holding: bool) -> void:
 	sprite.flip_h = face < 0.0
 
 	# Jump state-machine edges.

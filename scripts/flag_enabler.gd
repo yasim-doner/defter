@@ -34,4 +34,6 @@ func _ready() -> void:
 			var parent = get_parent()
 			if parent:
 				if not should_enable:
+					parent.set_process(false)
+					parent.set_physics_process(false)
 					parent.queue_free()
